@@ -1,8 +1,10 @@
-from PySide6.QtWidgets import QMainWindow, QWidget, QApplication, QTabWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QLineEdit, QFileDialog
-from PySide6.QtGui import QIcon, QDoubleValidator
+from PySide6.QtWidgets import QMainWindow, QWidget, QApplication, QTabWidget, QVBoxLayout, QPushButton
+from PySide6.QtGui import QIcon
 import sys
-from PySide6.QtCore import QLocale
 from os.path import exists
+
+from GUI.customDialogs import DenoiseDialog, StaticArrayDialog
+from customLayout import DoubleSelector, FileExplorerLayout
 
 from juliacall import Main as jl
 
@@ -14,60 +16,6 @@ def is_path_list_valid(path_list):
             return False
     return True
 
-class DoubleSelector(QVBoxLayout):
-    def __init__(self, min, max, label, dec=16, *args, **kwargs):
-        super(DoubleSelector, self).__init__(*args, **kwargs)
-
-        self.min = min
-        self.max = max
-
-        self.line_edit = QLineEdit("")
-        self.line_edit.setPlaceholderText("*required")
-        validator = QDoubleValidator(self.min, self.max, dec)
-        locale = QLocale(QLocale.English, QLocale.UnitedStates)
-        validator.setLocale(locale)
-        validator.setNotation(QDoubleValidator.Notation.StandardNotation)
-        self.line_edit.setValidator(validator)
-
-        self.line_edit.textChanged.connect(self.check_lat)
-
-        self.addWidget(QLabel(label + " :"))
-        self.addWidget(self.line_edit)
-
-    def check_lat(self):
-        try :
-            if float(self.line_edit.text()) > self.max :
-                self.line_edit.setText(str(self.max))
-            elif float(self.line_edit.text()) < self.min :
-                self.line_edit.setText(str(self.min))
-        except :
-            return
-
-class FileExplorerLayout(QVBoxLayout):
-    def __init__(self, label, *args, **kwargs):
-        super(FileExplorerLayout, self).__init__(*args, **kwargs)
-        self.label = label
-
-        self.file_path = ""
-
-        self.addWidget(QLabel(self.label+" :"))
-
-        selector = QHBoxLayout()
-        self.button = QPushButton("Select file")
-        self.button.clicked.connect(self.open_file_dialog)
-        selector.addWidget(self.button)
-
-        self.line_edit = QLineEdit(self.file_path)
-        self.line_edit.setDisabled(True)
-        self.line_edit.setPlaceholderText("*required")
-        selector.addWidget(self.line_edit)
-
-        self.addLayout(selector)
-
-    def open_file_dialog(self):
-        dlg = QFileDialog()
-        dlg.setWindowTitle("Select " + self.label + " File")
-        self.line_edit.setText(dlg.getOpenFileName()[0])
 
 class MainWindow(QMainWindow):
 
@@ -102,35 +50,20 @@ class MainWindow(QMainWindow):
         self.preproc_tab = QWidget()
         self.preproc_tab_layout = QVBoxLayout()
 
-        self.preproc_maintab = QTabWidget()
+        self.denoise_Button = QPushButton("Denoise")
+        self.denoise_Button.clicked.connect(self.run_denoise_dlg)
+        self.preproc_tab_layout.addWidget(self.denoise_Button)
 
-
-        # DENOISE
-        self.denoise_tab = QWidget()
-        self.denoise_tab_layout = QVBoxLayout()
-
-        self.denoise_lat_selector = DoubleSelector(-89.99, 89.99, "Latitude")
-        self.denoise_tab_layout.addLayout(self.denoise_lat_selector)
-        self.denoise_TR_DEPTH_selector = DoubleSelector(0, 99999.0, "Surface transducer depth")
-        self.denoise_tab_layout.addLayout(self.denoise_TR_DEPTH_selector)
-        self.run_denoise_button = QPushButton("Run denoise")
-        self.run_denoise_button.clicked.connect(self.run_denoise)
-        self.denoise_tab_layout.addWidget(self.run_denoise_button)
-
-
-        self.denoise_tab.setLayout(self.denoise_tab_layout)
-
-        # Aplying tabs
-        self.preproc_maintab.addTab(self.denoise_tab, "Denoise")
-
-
-        self.preproc_tab_layout.addWidget(self.preproc_maintab)
         self.preproc_tab.setLayout(self.preproc_tab_layout)
 
     ### CALC TAB ###
 
         self.calc_tab = QWidget()
         self.calc_tab_layout = QVBoxLayout()
+
+        self.static_array_Button = QPushButton("Static array")
+        self.static_array_Button.clicked.connect(self.run_static_array_dlg)
+        self.calc_tab_layout.addWidget(self.static_array_Button)
 
         self.calc_tab.setLayout(self.calc_tab_layout)
 
@@ -170,26 +103,27 @@ class MainWindow(QMainWindow):
 
 
 
-    def run_denoise(self):
+    def run_denoise_dlg(self):
 
         l_path = self.get_path_list()
         if not is_path_list_valid(l_path):
             print("Paths not valid")
             return
-        if self.denoise_lat_selector.line_edit.text() == "" or self.denoise_TR_DEPTH_selector.line_edit.text() == "" :
-            print("lacking denoise parameters")
-            return
-        path_ANT, path_PXP, path_SSP, path_OBS = l_path
-        lat = float(self.denoise_lat_selector.line_edit.text())
-        TR_DEPTH = float(self.denoise_TR_DEPTH_selector.line_edit.text())
-        print(path_ANT)
-        print(path_PXP)
-        print(path_SSP)
-        print(path_OBS)
-        print(lat)
-        print(TR_DEPTH)
-        jl.SeaGap.denoise(lat,TR_DEPTH, fn1=path_ANT , fn2=path_PXP , fn3=path_SSP , fn4=path_OBS)
+        denoise_dlg = DenoiseDialog(l_path, jl)
+        denoise_dlg.exec()
         print("END END END")
+
+
+    def run_static_array_dlg(self):
+
+        l_path = self.get_path_list()
+        if not is_path_list_valid(l_path):
+            print("Paths not valid")
+            return
+        static_array_dlg = StaticArrayDialog(l_path, jl)
+        static_array_dlg.exec()
+        print("END END END")
+
 
 
 if __name__ == '__main__':
