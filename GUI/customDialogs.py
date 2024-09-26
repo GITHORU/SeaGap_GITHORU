@@ -1,9 +1,11 @@
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QDialogButtonBox
-from customLayout import DoubleSelector, IntSelector
+from customLayout import DoubleSelector, IntSelector, FolderExplorerLayout
 from PySide6.QtGui import QIcon, QPixmap
 import shutil, os
 from PySide6.QtCore import Qt
 import juliacall
+
+from os.path import exists
 
 class DenoiseDialog(QDialog):
     
@@ -149,6 +151,9 @@ class StaticArrayDialog(QDialog):
         self.delta_pos_selector = DoubleSelector(0, 99999.0, "Infinitesimal distance value for Jacobian matrix", False, backText="(def : 1.e-4)")
         self.input_layout.addLayout(self.delta_pos_selector)
 
+        self.folder_selector = FolderExplorerLayout("Static array folder")
+        self.input_layout.addLayout(self.folder_selector)
+
         self.run_static_array_button = QPushButton("Run static array")
         self.run_static_array_button.clicked.connect(self.run_static_array)
         self.input_layout.addWidget(self.run_static_array_button)
@@ -170,12 +175,17 @@ class StaticArrayDialog(QDialog):
         self.setLayout(self.layout)
 
     def run_static_array(self):
-        if self.lat_selector.line_edit.text() == "" or self.TR_DEPTH_selector.line_edit.text() == "":
-            print("lacking denoise parameters")
+        if self.lat_selector.line_edit.text() == "" or self.TR_DEPTH_selector.line_edit.text() == "" or self.folder_selector.line_edit.text() == "":
+            print("lacking static array parameters")
+            return
+
+        if not exists(self.folder_selector.line_edit.text()):
+            print("wrong path entered")
             return
 
         path_ANT, path_PXP, path_SSP, path_OBS = self.l_path
         lat = float(self.lat_selector.line_edit.text())
+        folder_path = self.folder_selector.line_edit.text()
         TR_DEPTH = float(self.TR_DEPTH_selector.line_edit.text())
         if self.NPB_selector.line_edit.text() != "":
             NPB = int(self.NPB_selector.line_edit.text())
@@ -193,6 +203,197 @@ class StaticArrayDialog(QDialog):
             delta_pos = float(self.delta_pos_selector.line_edit.text())
         else:
             delta_pos = 0.0001
-        self.jl.SeaGap.static_array(lat, juliacall.convert(self.jl.Vector[self.jl.Float64], [TR_DEPTH]), NPB, fn1=path_ANT, fn2=path_PXP, fn3=path_SSP, fn4=path_OBS, eps=eps, ITMAX=ITMAX, delta_pos=delta_pos)
+        log_path = os.path.join(folder_path, "static_array_log.out")
+        solve_path = os.path.join(folder_path, "static_array_solve.out")
+        position_path = os.path.join(folder_path, "static_array_position.out")
+        residual_path = os.path.join(folder_path, "static_array_residual.out")
+        bspline_path = os.path.join(folder_path, "static_array_bspline.out")
+        AICBIC_path = os.path.join(folder_path, "static_array_AICBIC.out")
+        self.jl.SeaGap.static_array(lat, juliacall.convert(self.jl.Vector[self.jl.Float64], [TR_DEPTH]), NPB, fn1=path_ANT, fn2=path_PXP, fn3=path_SSP, fn4=path_OBS, eps=eps, ITMAX=ITMAX, delta_pos=delta_pos, fno0=log_path, fno1=solve_path, fno2=position_path, fno3=residual_path, fno4=bspline_path, fno5=AICBIC_path)
+
+        self.buttonBox.setDisabled(False)
+        
+        
+class StaticArrayGradDialog(QDialog):
+
+    def __init__(self, l_path, jl):
+        super().__init__()
+
+        self.setWindowTitle("Static array grad")
+        my_icon = QIcon("./img/logo.png")
+        self.setWindowIcon(my_icon)
+
+        self.l_path = l_path
+        self.jl = jl
+
+        self.layout = QHBoxLayout()
+
+        self.input_layout = QVBoxLayout()
+
+        self.lat_selector = DoubleSelector(-89.99, 89.99, "Latitude", True)
+        self.input_layout.addLayout(self.lat_selector)
+
+        self.TR_DEPTH_selector = DoubleSelector(0.0, 99999.0, "Surface transducer depth", True)
+        self.input_layout.addLayout(self.TR_DEPTH_selector)
+
+        self.NPB_selector = IntSelector(3, 99999, "Number of temporal B-spline bases", False, backText="(def : 100)")
+        self.input_layout.addLayout(self.NPB_selector)
+
+        self.ITMAX_selector = IntSelector(1, 99999, "Max. number of iterations", False, backText="(def : 50)")
+        self.input_layout.addLayout(self.ITMAX_selector)
+
+        self.delta_pos_selector = DoubleSelector(0, 99999.0, "Infinitesimal distance value for Jacobian matrix", False, backText="(def : 1.e-4)")
+        self.input_layout.addLayout(self.delta_pos_selector)
+
+        self.folder_selector = FolderExplorerLayout("Static array grad folder")
+        self.input_layout.addLayout(self.folder_selector)
+
+        self.run_static_array_grad_button = QPushButton("Run static array grad")
+        self.run_static_array_grad_button.clicked.connect(self.run_static_array_grad)
+        self.input_layout.addWidget(self.run_static_array_grad_button)
+
+        self.graph_img = QLabel()
+        self.layout.addLayout(self.input_layout)
+        self.layout.addWidget(self.graph_img)
+
+        QBtn = (
+                QDialogButtonBox.Ok
+        )
+
+        self.buttonBox = QDialogButtonBox(QBtn)
+        self.buttonBox.setDisabled(True)
+        self.buttonBox.accepted.connect(self.accept)
+
+        self.input_layout.addWidget(self.buttonBox)
+
+        self.setLayout(self.layout)
+
+    def run_static_array_grad(self):
+        if self.lat_selector.line_edit.text() == "" or self.TR_DEPTH_selector.line_edit.text() == "" or self.folder_selector.line_edit.text() == "":
+            print("lacking static array parameters")
+            return
+
+        if not exists(self.folder_selector.line_edit.text()):
+            print("wrong path entered")
+            return
+
+        path_ANT, path_PXP, path_SSP, path_OBS = self.l_path
+        lat = float(self.lat_selector.line_edit.text())
+        folder_path = self.folder_selector.line_edit.text()
+        TR_DEPTH = float(self.TR_DEPTH_selector.line_edit.text())
+        if self.NPB_selector.line_edit.text() != "":
+            NPB = int(self.NPB_selector.line_edit.text())
+        else:
+            NPB = 100
+        if self.ITMAX_selector.line_edit.text() != "":
+            ITMAX = int(self.ITMAX_selector.line_edit.text())
+        else:
+            ITMAX = 50
+        if self.delta_pos_selector.line_edit.text() != "":
+            delta_pos = float(self.delta_pos_selector.line_edit.text())
+        else:
+            delta_pos = 0.0001
+        log_path = os.path.join(folder_path, "static_array_grad_log.out")
+        solve_path = os.path.join(folder_path, "static_array_grad_solve.out")
+        position_path = os.path.join(folder_path, "static_array_grad_position.out")
+        residual_path = os.path.join(folder_path, "static_array_grad_residual.out")
+        bspline_path = os.path.join(folder_path, "static_array_grad_bspline.out")
+        self.jl.SeaGap.static_array_grad(lat, juliacall.convert(self.jl.Vector[self.jl.Float64], [TR_DEPTH]), NPB, fn1=path_ANT, fn2=path_PXP, fn3=path_SSP, fn4=path_OBS, ITMAX=ITMAX, delta_pos=delta_pos, fno0=log_path, fno1=solve_path, fno2=position_path, fno3=residual_path, fno4=bspline_path)
+
+        self.buttonBox.setDisabled(False)
+        
+
+class StaticIndividualDialog(QDialog):
+
+    def __init__(self, l_path, jl):
+        super().__init__()
+
+        self.setWindowTitle("Static array individual")
+        my_icon = QIcon("./img/logo.png")
+        self.setWindowIcon(my_icon)
+
+        self.l_path = l_path
+        self.jl = jl
+
+        self.layout = QHBoxLayout()
+
+        self.input_layout = QVBoxLayout()
+
+        self.lat_selector = DoubleSelector(-89.99, 89.99, "Latitude", True)
+        self.input_layout.addLayout(self.lat_selector)
+
+        self.TR_DEPTH_selector = DoubleSelector(0.0, 99999.0, "Surface transducer depth", True)
+        self.input_layout.addLayout(self.TR_DEPTH_selector)
+
+        self.NPB_selector = IntSelector(3, 99999, "Number of temporal B-spline bases", False, backText="(def : 100)")
+        self.input_layout.addLayout(self.NPB_selector)
+
+        self.eps_selector = DoubleSelector(0.0, 99999.0, "Convergence threshold", False, backText="(def : 1.e-4)")
+        self.input_layout.addLayout(self.eps_selector)
+
+        self.ITMAX_selector = IntSelector(1, 99999, "Max. number of iterations", False, backText="(def : 50)")
+        self.input_layout.addLayout(self.ITMAX_selector)
+
+        self.delta_pos_selector = DoubleSelector(0, 99999.0, "Infinitesimal distance value for Jacobian matrix", False, backText="(def : 1.e-4)")
+        self.input_layout.addLayout(self.delta_pos_selector)
+
+        self.folder_selector = FolderExplorerLayout("Static array individual folder")
+        self.input_layout.addLayout(self.folder_selector)
+
+        self.run_static_array_button = QPushButton("Run static array individual")
+        self.run_static_array_button.clicked.connect(self.run_static_individual)
+        self.input_layout.addWidget(self.run_static_array_button)
+
+        self.graph_img = QLabel()
+        self.layout.addLayout(self.input_layout)
+        self.layout.addWidget(self.graph_img)
+
+        QBtn = (
+                QDialogButtonBox.Ok
+        )
+
+        self.buttonBox = QDialogButtonBox(QBtn)
+        self.buttonBox.setDisabled(True)
+        self.buttonBox.accepted.connect(self.accept)
+
+        self.input_layout.addWidget(self.buttonBox)
+
+        self.setLayout(self.layout)
+
+    def run_static_individual(self):
+        if self.lat_selector.line_edit.text() == "" or self.TR_DEPTH_selector.line_edit.text() == "" or self.folder_selector.line_edit.text() == "":
+            print("lacking static array individual parameters")
+            return
+
+        if not exists(self.folder_selector.line_edit.text()):
+            print("wrong path entered")
+            return
+
+        path_ANT, path_PXP, path_SSP, path_OBS = self.l_path
+        lat = float(self.lat_selector.line_edit.text())
+        folder_path = self.folder_selector.line_edit.text()
+        TR_DEPTH = float(self.TR_DEPTH_selector.line_edit.text())
+        if self.NPB_selector.line_edit.text() != "":
+            NPB = int(self.NPB_selector.line_edit.text())
+        else:
+            NPB = 100
+        if self.eps_selector.line_edit.text() != "":
+            eps = float(self.eps_selector.line_edit.text())
+        else:
+            eps = 0.0001
+        if self.ITMAX_selector.line_edit.text() != "":
+            ITMAX = int(self.ITMAX_selector.line_edit.text())
+        else:
+            ITMAX = 50
+        if self.delta_pos_selector.line_edit.text() != "":
+            delta_pos = float(self.delta_pos_selector.line_edit.text())
+        else:
+            delta_pos = 0.0001
+        log_path = os.path.join(folder_path, "static_array_individual_log.out")
+        solve_path = os.path.join(folder_path, "static_array_individual_solve.out")
+        position_path = os.path.join(folder_path, "static_array_individual_position.out")
+        residual_path = os.path.join(folder_path, "static_array_individual_residual.out")
+        bspline_path = os.path.join(folder_path, "static_array_individual_bspline.out")
+        self.jl.SeaGap.static_individual(lat, juliacall.convert(self.jl.Vector[self.jl.Float64], [TR_DEPTH]), NPB, fn1=path_ANT, fn2=path_PXP, fn3=path_SSP, fn4=path_OBS, eps=eps, ITMAX=ITMAX, delta_pos=delta_pos, fno0=log_path, fno1=solve_path, fno2=position_path, fno3=residual_path, fno4=bspline_path)
 
         self.buttonBox.setDisabled(False)

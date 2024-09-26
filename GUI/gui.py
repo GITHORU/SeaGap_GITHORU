@@ -3,8 +3,8 @@ from PySide6.QtGui import QIcon
 import sys
 from os.path import exists
 
-from GUI.customDialogs import DenoiseDialog, StaticArrayDialog
-from customLayout import DoubleSelector, FileExplorerLayout
+from GUI.customDialogs import DenoiseDialog, StaticArrayDialog,StaticArrayGradDialog, StaticIndividualDialog
+from customLayout import FileExplorerLayout
 
 from juliacall import Main as jl
 
@@ -65,6 +65,14 @@ class MainWindow(QMainWindow):
         self.static_array_Button.clicked.connect(self.run_static_array_dlg)
         self.calc_tab_layout.addWidget(self.static_array_Button)
 
+        self.static_array_grad_Button = QPushButton("Static array_grad")
+        self.static_array_grad_Button.clicked.connect(self.run_static_array_grad_dlg)
+        self.calc_tab_layout.addWidget(self.static_array_grad_Button)
+
+        self.static_individual_Button = QPushButton("Static individual")
+        self.static_individual_Button.clicked.connect(self.run_static_individual_dlg)
+        self.calc_tab_layout.addWidget(self.static_individual_Button)
+
         self.calc_tab.setLayout(self.calc_tab_layout)
 
     ### PLOTTING TAB ###
@@ -122,6 +130,28 @@ class MainWindow(QMainWindow):
             return
         static_array_dlg = StaticArrayDialog(l_path, jl)
         static_array_dlg.exec()
+        print("END END END")
+
+
+    def run_static_array_grad_dlg(self):
+
+        l_path = self.get_path_list()
+        if not is_path_list_valid(l_path):
+            print("Paths not valid")
+            return
+        static_array_grad_dlg = StaticArrayGradDialog(l_path, jl)
+        static_array_grad_dlg.exec()
+        print("END END END")
+
+
+    def run_static_individual_dlg(self):
+
+        l_path = self.get_path_list()
+        if not is_path_list_valid(l_path):
+            print("Paths not valid")
+            return
+        static_array_individual_dlg = StaticIndividualDialog(l_path, jl)
+        static_array_individual_dlg.exec()
         print("END END END")
 
 
