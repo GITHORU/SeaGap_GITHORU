@@ -301,7 +301,314 @@ class StaticArrayGradDialog(QDialog):
         self.jl.SeaGap.static_array_grad(lat, juliacall.convert(self.jl.Vector[self.jl.Float64], [TR_DEPTH]), NPB, fn1=path_ANT, fn2=path_PXP, fn3=path_SSP, fn4=path_OBS, ITMAX=ITMAX, delta_pos=delta_pos, fno0=log_path, fno1=solve_path, fno2=position_path, fno3=residual_path, fno4=bspline_path)
 
         self.buttonBox.setDisabled(False)
-        
+
+
+# class StaticArrayMCMCGradDialog(QDialog):
+#
+#     def __init__(self, l_path, jl):
+#         super().__init__()
+#
+#         self.setWindowTitle("Static array MCMC grad")
+#         my_icon = QIcon("./img/logo.png")
+#         self.setWindowIcon(my_icon)
+#
+#         self.l_path = l_path
+#         self.jl = jl
+#
+#         self.layout = QHBoxLayout()
+#
+#         self.input_layout = QVBoxLayout()
+#
+#         self.lat_selector = DoubleSelector(-89.99, 89.99, "Latitude", True)
+#         self.input_layout.addLayout(self.lat_selector)
+#
+#         self.TR_DEPTH_selector = DoubleSelector(0.0, 99999.0, "Surface transducer depth", True)
+#         self.input_layout.addLayout(self.TR_DEPTH_selector)
+#
+#         self.NPB_selector = IntSelector(3, 99999, "Number of temporal B-spline bases", False, backText="(def : 100)")
+#         self.input_layout.addLayout(self.NPB_selector)
+#
+#         self.NSB_selector = IntSelector(3, 99999, "Number of the perturbated bases for each iteration", False, backText="(def : 100)")
+#         self.input_layout.addLayout(self.NSB_selector)
+#
+#         self.nloop_selector = IntSelector(3, 999999999, "Total number of the MCMC iterations", False, backText="(def : 1200000)")
+#         self.input_layout.addLayout(self.nloop_selector)
+#
+#         self.nburn_selector = IntSelector(3, 999999999, "Burn-in period of the MCMC iterations", False, backText="(def : 200000)")
+#         self.input_layout.addLayout(self.nburn_selector)
+#
+#         self.ndelay_selector = IntSelector(1, 999999999, "Number of the MCMC iterations for starting to perturb the scaling parameters", False, backText="(def : 1)")
+#         self.input_layout.addLayout(self.ndelay_selector)
+#
+#         self.NA_selector = IntSelector(1, 999999999, "Number of the sampling interval", False, backText="(def : 5)")
+#         self.input_layout.addLayout(self.NA_selector)
+#
+#         self.lscale_selector = DoubleSelector(0.0, 99999.0, "Scaling factor for the step width of the long-term NTD parameters", False, backText="(def : 1.0)")
+#         self.input_layout.addLayout(self.lscale_selector)
+#
+#         self.tscale_selector = DoubleSelector(0.0, 99999.0, "Temporal scaling for time in the polynomial functions", False, backText="(def : 10.0)")
+#         self.input_layout.addLayout(self.tscale_selector)
+#
+#         self.folder_selector = FolderExplorerLayout("Static array MCMC grad folder")
+#         self.input_layout.addLayout(self.folder_selector)
+#
+#         self.run_static_array_mcmcgrad_button = QPushButton("Run static array MCMC grad")
+#         self.run_static_array_mcmcgrad_button.clicked.connect(self.run_static_array_mcmcgrad)
+#         self.input_layout.addWidget(self.run_static_array_mcmcgrad_button)
+#
+#         self.graph_img = QLabel()
+#         self.layout.addLayout(self.input_layout)
+#         self.layout.addWidget(self.graph_img)
+#
+#         QBtn = (
+#                 QDialogButtonBox.Ok
+#         )
+#
+#         self.buttonBox = QDialogButtonBox(QBtn)
+#         self.buttonBox.setDisabled(True)
+#         self.buttonBox.accepted.connect(self.accept)
+#
+#         self.input_layout.addWidget(self.buttonBox)
+#
+#         self.setLayout(self.layout)
+#
+#     def run_static_array_mcmcgrad(self):
+#         if self.lat_selector.line_edit.text() == "" or self.TR_DEPTH_selector.line_edit.text() == "" or self.folder_selector.line_edit.text() == "":
+#             print("lacking static array MCMC grad parameters")
+#             return
+#
+#         if not exists(self.folder_selector.line_edit.text()):
+#             print("wrong path entered")
+#             return
+#
+#         path_ANT, path_PXP, path_SSP, path_OBS = self.l_path
+#         lat = float(self.lat_selector.line_edit.text())
+#         folder_path = self.folder_selector.line_edit.text()
+#         TR_DEPTH = float(self.TR_DEPTH_selector.line_edit.text())
+#         if self.NPB_selector.line_edit.text() != "":
+#             NPB = int(self.NPB_selector.line_edit.text())
+#         else:
+#             NPB = 100
+#         if self.NSB_selector.line_edit.text() != "":
+#             NSB = int(self.NSB_selector.line_edit.text())
+#         else:
+#             NSB = 100
+#         if self.nloop_selector.line_edit.text() != "":
+#             nloop = int(self.nloop_selector.line_edit.text())
+#         else:
+#             nloop = 1200000
+#         if self.nburn_selector.line_edit.text() != "":
+#             nburn = int(self.nburn_selector.line_edit.text())
+#         else:
+#             nburn = 200000
+#         if self.ndelay_selector.line_edit.text() != "":
+#             ndelay = int(self.ndelay_selector.line_edit.text())
+#         else:
+#             ndelay = 1
+#         if self.NA_selector.line_edit.text() != "":
+#             NA = int(self.NA_selector.line_edit.text())
+#         else:
+#             NA = 5
+#         if self.lscale_selector.line_edit.text() != "":
+#             lscale = float(self.lscale_selector.line_edit.text())
+#         else:
+#             lscale = 1.0
+#         if self.tscale_selector.line_edit.text() != "":
+#             tscale = float(self.tscale_selector.line_edit.text())
+#         else:
+#             tscale = 10.0
+#         log_path = os.path.join(folder_path, "static_array_mcmcgrad_log.out")
+#         sample_path = os.path.join(folder_path, "static_array_mcmcgrad_sample.out")
+#         mcmc_path = os.path.join(folder_path, "static_array_mcmcgrad_mcmc.out")
+#         position_path = os.path.join(folder_path, "static_array_mcmcgrad_position.out")
+#         statistics_path = os.path.join(folder_path, "static_array_mcmcgrad_statistics.out")
+#         acceptance_path = os.path.join(folder_path, "static_array_mcmcgrad_acceptance.out")
+#         residual_path = os.path.join(folder_path, "static_array_mcmcgrad_residual.out")
+#         bspline_path = os.path.join(folder_path, "static_array_mcmcgrad_bspline.out")
+#         self.jl.SeaGap.static_array_mcmcgrad(lat, juliacall.convert(self.jl.Vector[self.jl.Float64], [TR_DEPTH]), NPB, NSB=NSB, nloop=nloop, nburn=nburn, NA=NA, lscale=lscale, tscale=tscale, ndelay=ndelay, fn1=path_ANT, fn2=path_PXP, fn3=path_SSP, fn4=path_OBS, fn5=path_PXP, fno0=log_path, fno1=sample_path, fno2=mcmc_path, fno3=position_path, fno4=statistics_path, fno5=acceptance_path, fno6=residual_path, fno7=bspline_path)
+#
+#         self.buttonBox.setDisabled(False)
+
+class StaticArrayMCMCGradVDialog(QDialog):
+
+    def __init__(self, l_path, jl):
+        super().__init__()
+
+        self.setWindowTitle("Static array MCMC grad V")
+        my_icon = QIcon("./img/logo.png")
+        self.setWindowIcon(my_icon)
+
+        self.l_path = l_path
+        self.jl = jl
+
+        self.layout = QHBoxLayout()
+
+        self.input_layout = QVBoxLayout()
+
+        self.lat_selector = DoubleSelector(-89.99, 89.99, "Latitude", True)
+        self.input_layout.addLayout(self.lat_selector)
+
+        self.dep_selector = DoubleSelector(0.0, 99999.0, "Water depth of the site (km)", True)
+        self.input_layout.addLayout(self.dep_selector)
+
+        self.TR_DEPTH_selector = DoubleSelector(0.0, 99999.0, "Surface transducer depth", True)
+        self.input_layout.addLayout(self.TR_DEPTH_selector)
+
+        self.NPB1_selector = IntSelector(3, 99999, "Number of L-NTD B-spline bases", False, backText="(def : 5)")
+        self.input_layout.addLayout(self.NPB1_selector)
+
+        self.NPB2_selector = IntSelector(3, 99999, "Number of S-NTD B-spline bases", False, backText="(def : 100)")
+        self.input_layout.addLayout(self.NPB2_selector)
+
+        self.NPB3_selector = IntSelector(3, 99999, "Number of shallow gradient B-spline bases", False, backText="(def : 5)")
+        self.input_layout.addLayout(self.NPB3_selector)
+
+        self.NPB4_selector = IntSelector(3, 99999, "Number of gradient depth B-spline bases", False, backText="(def : 1)")
+        self.input_layout.addLayout(self.NPB4_selector)
+
+        self.NSB_selector = IntSelector(3, 99999, "Number of the perturbated bases for each iteration", False, backText="(def : 100)")
+        self.input_layout.addLayout(self.NSB_selector)
+
+        self.gm_selector = DoubleSelector(0.0, 999999999.0, "Mean value for shallow gradient constraint", False, backText="(def : 0.0)")
+        self.input_layout.addLayout(self.gm_selector)
+
+        self.gs_selector = DoubleSelector(0.0, 999999999.0, "Std value for shallow gradient constraint", False, backText="(def : 0.00005)")
+        self.input_layout.addLayout(self.gs_selector)
+
+        self.dm_selector = DoubleSelector(0.0, 999999999.0, "Mean value for gradient depth constraint", False, backText="(def : 0.65)")
+        self.input_layout.addLayout(self.dm_selector)
+
+        self.ds_selector = DoubleSelector(0.0, 999999999.0, "Std value for gradient depth constraint", False, backText="(def : 0.15)")
+        self.input_layout.addLayout(self.ds_selector)
+
+        self.rm_selector = DoubleSelector(0.0, 999999999.0, "Mean value for relative gradient depth constraint", False, backText="(def : 0.0)")
+        self.input_layout.addLayout(self.rm_selector)
+
+        self.rs_selector = DoubleSelector(0.0, 999999999.0, "Std value for relative gradient depth constraint", False, backText="(def : 0.1)")
+        self.input_layout.addLayout(self.rs_selector)
+
+        self.nloop_selector = IntSelector(3, 999999999, "Total number of the MCMC iterations", False, backText="(def : 600000)")
+        self.input_layout.addLayout(self.nloop_selector)
+
+        self.nburn_selector = IntSelector(3, 999999999, "Burn-in period of the MCMC iterations", False, backText="(def : 100000)")
+        self.input_layout.addLayout(self.nburn_selector)
+
+        self.NA_selector = IntSelector(1, 999999999, "Number of the sampling interval", False, backText="(def : 5)")
+        self.input_layout.addLayout(self.NA_selector)
+
+        self.folder_selector = FolderExplorerLayout("Static array MCMC grad folder")
+        self.input_layout.addLayout(self.folder_selector)
+
+        self.run_static_array_mcmcgradv_button = QPushButton("Run static array MCMC grad V")
+        self.run_static_array_mcmcgradv_button.clicked.connect(self.run_static_array_mcmcgradv)
+        self.input_layout.addWidget(self.run_static_array_mcmcgradv_button)
+
+        self.graph_img = QLabel()
+        self.layout.addLayout(self.input_layout)
+        self.layout.addWidget(self.graph_img)
+
+        QBtn = (
+                QDialogButtonBox.Ok
+        )
+
+        self.buttonBox = QDialogButtonBox(QBtn)
+        self.buttonBox.setDisabled(True)
+        self.buttonBox.accepted.connect(self.accept)
+
+        self.input_layout.addWidget(self.buttonBox)
+
+        self.setLayout(self.layout)
+
+    def run_static_array_mcmcgradv(self):
+        if self.lat_selector.line_edit.text() == "" or self.TR_DEPTH_selector.line_edit.text() == "" or self.folder_selector.line_edit.text() == "" or self.dep_selector.line_edit.text() == "":
+            print("lacking static array MCMC grad parameters")
+            return
+
+        if not exists(self.folder_selector.line_edit.text()):
+            print("wrong path entered")
+            return
+
+        path_ANT, path_PXP, path_SSP, path_OBS = self.l_path
+        lat = float(self.lat_selector.line_edit.text())
+        folder_path = self.folder_selector.line_edit.text()
+        TR_DEPTH = float(self.TR_DEPTH_selector.line_edit.text())
+        dep = float(self.dep_selector.line_edit.text())
+        if self.NPB1_selector.line_edit.text() != "":
+            NPB1 = int(self.NPB1_selector.line_edit.text())
+        else:
+            NPB1 = 5
+        if self.NPB2_selector.line_edit.text() != "":
+            NPB2 = int(self.NPB2_selector.line_edit.text())
+        else:
+            NPB2 = 100
+        if self.NPB3_selector.line_edit.text() != "":
+            NPB3 = int(self.NPB3_selector.line_edit.text())
+        else:
+            NPB3 = 5
+        if self.NPB4_selector.line_edit.text() != "":
+            NPB4 = int(self.NPB4_selector.line_edit.text())
+        else:
+            NPB4 = 1
+        if self.gm_selector.line_edit.text() != "":
+            gm = float(self.gm_selector.line_edit.text())
+        else:
+            gm = 0.0
+        if self.gs_selector.line_edit.text() != "":
+            gs = float(self.gs_selector.line_edit.text())
+        else:
+            gs = 0.00005
+
+        if self.dm_selector.line_edit.text() != "":
+            dm = float(self.dm_selector.line_edit.text())
+        else:
+            dm = 0.65
+        if self.ds_selector.line_edit.text() != "":
+            ds = float(self.ds_selector.line_edit.text())
+        else:
+            ds = 0.15
+
+        if self.rm_selector.line_edit.text() != "":
+            rm = float(self.rm_selector.line_edit.text())
+        else:
+            rm = 0.0
+        if self.rs_selector.line_edit.text() != "":
+            rs = float(self.rs_selector.line_edit.text())
+        else:
+            rs = 0.1
+
+
+        if self.nloop_selector.line_edit.text() != "":
+            nloop = int(self.nloop_selector.line_edit.text())
+        else:
+            nloop = 600000
+        if self.nburn_selector.line_edit.text() != "":
+            nburn = int(self.nburn_selector.line_edit.text())
+        else:
+            nburn = 100000
+
+        # if self.lscale_selector.line_edit.text() != "":
+        #     lscale = float(self.lscale_selector.line_edit.text())
+        # else:
+        #     lscale = 1.0
+
+
+        log_path = os.path.join(folder_path, "static_array_mcmcgradv_log.out")
+        sample_path = os.path.join(folder_path, "static_array_mcmcgradv_sample.out")
+        mcmc_path = os.path.join(folder_path, "static_array_mcmcgradv_mcmc.out")
+        position_path = os.path.join(folder_path, "static_array_mcmcgradv_position.out")
+        statistics_path = os.path.join(folder_path, "static_array_mcmcgradv_statistics.out")
+        acceptance_path = os.path.join(folder_path, "static_array_mcmcgradv_acceptance.out")
+        residual_path = os.path.join(folder_path, "static_array_mcmcgradv_residual.out")
+        bspline_path = os.path.join(folder_path, "static_array_mcmcgradv_bspline.out")
+        gradient_path = os.path.join(folder_path, "static_array_mcmcgradv_gradient.out")
+        initial_path = os.path.join(folder_path, "static_array_mcmcgradv_initial.out")
+
+        self.jl.SeaGap.static_array_s(lat, juliacall.convert(self.jl.Vector[self.jl.Float64], [TR_DEPTH]), 0.0, NPB1, NPB2, fn1=path_ANT, fn2=path_PXP, fn3=path_SSP, fn4=path_OBS, fno0="gui_tmp/static_array_s_log.txt",fno1="gui_tmp/static_array_s_solve.out",fno2="gui_tmp/static_array_s_position.out",fno3="gui_tmp/static_array_s_residual_sdls.out",fno4="gui_tmp/static_array_s_S-NTD.out",fno5="gui_tmp/static_array_s_ABIC.out",fno6="gui_tmp/static_array_s_gradient.out")
+        self.jl.SeaGap.make_initial_gradv(NPB1, NPB2, fn="gui_tmp/static_array_s_solve.out", fno="gui_tmp/static_array_s_initial.inp")
+        self.jl.SeaGap.static_array_mcmcgradv(lat, dep, juliacall.convert(self.jl.Vector[self.jl.Float64], [TR_DEPTH]), NPB1, NPB2, NPB3, NPB4, gm=gm, gs=gs, dm=dm, ds=ds, rm=rm, rs=rs, nloop=nloop, nburn=nburn, fn1=path_ANT, fn2=path_PXP, fn3=path_SSP, fn4=path_OBS, fn5="gui_tmp/static_array_s_initial.inp", fno0=log_path, fno1=sample_path, fno2=mcmc_path, fno3=position_path, fno4=statistics_path, fno5=acceptance_path, fno6=residual_path, fno7=bspline_path, fno8=gradient_path, fno9=initial_path)
+
+        self.buttonBox.setDisabled(False)
+
 
 class StaticIndividualDialog(QDialog):
 

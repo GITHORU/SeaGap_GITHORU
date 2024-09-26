@@ -69,11 +69,9 @@ class DoubleSelector(QVBoxLayout):
             return
 
 class FileExplorerLayout(QVBoxLayout):
-    def __init__(self, label, req=True, *args, **kwargs):
+    def __init__(self, label, req=True, default_text="", *args, **kwargs):
         super(FileExplorerLayout, self).__init__(*args, **kwargs)
         self.label = label
-
-        self.file_path = ""
 
         self.addWidget(QLabel(self.label+" :"))
 
@@ -82,7 +80,7 @@ class FileExplorerLayout(QVBoxLayout):
         self.button.clicked.connect(self.open_file_dialog)
         selector.addWidget(self.button)
 
-        self.line_edit = QLineEdit(self.file_path)
+        self.line_edit = QLineEdit(default_text)
         self.line_edit.setDisabled(True)
         if req :
             self.line_edit.setPlaceholderText("*required")
@@ -96,11 +94,9 @@ class FileExplorerLayout(QVBoxLayout):
         self.line_edit.setText(dlg.getOpenFileName()[0])
 
 class FolderExplorerLayout(QVBoxLayout):
-    def __init__(self, label, req=True, *args, **kwargs):
+    def __init__(self, label, req=True, default_text="", *args, **kwargs):
         super(FolderExplorerLayout, self).__init__(*args, **kwargs)
         self.label = label
-
-        self.folder_path = ""
 
         self.addWidget(QLabel(self.label+" :"))
 
@@ -109,7 +105,7 @@ class FolderExplorerLayout(QVBoxLayout):
         self.button.clicked.connect(self.open_folder_dialog)
         selector.addWidget(self.button)
 
-        self.line_edit = QLineEdit(self.folder_path)
+        self.line_edit = QLineEdit(default_text)
         self.line_edit.setDisabled(True)
         if req :
             self.line_edit.setPlaceholderText("*required")
