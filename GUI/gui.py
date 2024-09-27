@@ -1,10 +1,12 @@
-from PySide6.QtWidgets import QMainWindow, QWidget, QApplication, QTabWidget, QVBoxLayout, QPushButton
-from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import QMainWindow, QWidget, QApplication, QTabWidget, QVBoxLayout, QPushButton, QToolBar, QStatusBar, QFileDialog
+from PySide6.QtGui import QIcon, QAction
 import sys
-from os.path import exists
+from os.path import exists, join
 
-from GUI.customDialogs import DenoiseDialog, StaticArrayDialog,StaticArrayGradDialog, StaticArrayMCMCGradVDialog, StaticIndividualDialog
+from GUI.customDialogs import DenoiseDialog, StaticArrayDialog,StaticArrayGradDialog, StaticArrayMCMCGradVDialog, StaticIndividualDialog, NewProjectDialog
 from customLayout import FileExplorerLayout
+
+import yaml, os
 
 from juliacall import Main as jl
 
@@ -21,24 +23,56 @@ class MainWindow(QMainWindow):
 
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
+    ### ATTRIBUTES ###
+
+        self.base_path = ""
+        self.ANT_path = ""
+        self.PXP_path = ""
+        self.SSP_path = ""
+        self.OBS_path = ""
+        self.prj_path = ""
+
+    ### TOOLBAR ###
+
+        toolbar = QToolBar("My main toolbar")
+
+        self.new_project_action = QAction("New")
+        self.new_project_action.setStatusTip("Create a new project file")
+        self.new_project_action.triggered.connect(self.create_new_project)
+
+        self.load_proj_action = QAction("Load")
+        self.load_proj_action.setStatusTip("Load existing folder")
+        self.load_proj_action.triggered.connect(self.load_proj)
+
+        self.save_project_action = QAction("Save")
+        self.save_project_action.setStatusTip("Save current project")
+        self.save_project_action.triggered.connect(self.save_project)
+
+        toolbar.addAction(self.new_project_action)
+        toolbar.addAction(self.load_proj_action)
+        toolbar.addAction(self.save_project_action)
+
+        self.addToolBar(toolbar)
+        self.setStatusBar(QStatusBar(self))
 
         self.maintab = QTabWidget()
+
 
     ### FILE TAB ###
 
         self.file_tab = QWidget()
         self.file_tab_layout = QVBoxLayout()
 
-        self.ANT_file_explorer = FileExplorerLayout("ANT", default_text="./example_hugo/tr-ant.inp")
+        self.ANT_file_explorer = FileExplorerLayout("ANT")
         self.file_tab_layout.addLayout(self.ANT_file_explorer)
 
-        self.PXP_file_explorer = FileExplorerLayout("PXP", default_text="./example_hugo/pxp-ini.inp")
+        self.PXP_file_explorer = FileExplorerLayout("PXP")
         self.file_tab_layout.addLayout(self.PXP_file_explorer)
 
-        self.SSP_file_explorer = FileExplorerLayout("SSP", default_text="./example_hugo/ss_prof.inp")
+        self.SSP_file_explorer = FileExplorerLayout("SSP")
         self.file_tab_layout.addLayout(self.SSP_file_explorer)
 
-        self.OBS_file_explorer = FileExplorerLayout("OBS", default_text="./example_hugo/obsdata.inp")
+        self.OBS_file_explorer = FileExplorerLayout("OBS")
         self.file_tab_layout.addLayout(self.OBS_file_explorer)
 
 
@@ -110,6 +144,64 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(self.maintab)
 
+    def create_new_project(self):
+        dlg = NewProjectDialog()
+        dlg.setWindowTitle("Select new project folder")
+        dlg.exec()
+        if dlg.proj_file_path != "" :
+            self.load_proj(None, proj_file_path=dlg.proj_file_path)
+        print("NEW")
+
+    def load_proj(self, _, proj_file_path=""):
+        if proj_file_path == "" :
+            dlg = QFileDialog()
+            dlg.setWindowTitle("Select project file")
+            proj_file_path = dlg.getOpenFileName(filter="project(*.prj)")[0]
+        
+        if not exists(proj_file_path) :
+            print("wrong project file")
+            return
+        with open(proj_file_path) as f:
+            dict_prj = yaml.full_load(f)
+
+            self.base_path = dict_prj["base_path"]
+            if self.base_path != "" :
+                os.chdir(self.base_path)
+                self.ANT_file_explorer.default_path = self.base_path
+                self.PXP_file_explorer.default_path = self.base_path
+                self.SSP_file_explorer.default_path = self.base_path
+                self.OBS_file_explorer.default_path = self.base_path
+
+            self.ANT_path = dict_prj["ANT_path"]
+            self.ANT_file_explorer.line_edit.setText(self.ANT_path)
+
+            self.PXP_path = dict_prj["PXP_path"]
+            self.PXP_file_explorer.line_edit.setText(self.PXP_path)
+
+            self.SSP_path = dict_prj["SSP_path"]
+            self.SSP_file_explorer.line_edit.setText(self.SSP_path)
+
+            self.OBS_path = dict_prj["OBS_path"]
+            self.OBS_file_explorer.line_edit.setText(self.OBS_path)
+
+
+            self.proj_file_path = proj_file_path
+
+        print("LOAD")
+
+    def save_project(self):
+        if self.proj_file_path == "" :
+            print("warning : no project selected")
+        with open(self.proj_file_path, "w") as proj_file_path :
+            proj_file_path.write('---\n')
+            proj_file_path.write('base_path : "'+os.path.dirname(self.proj_file_path)+'"\n')
+            proj_file_path.write('proj_name : "'+os.path.splitext(os.path.basename(self.proj_file_path))[0]+'"\n')
+            proj_file_path.write('ANT_path : "'+self.ANT_file_explorer.line_edit.text()+'"\n')
+            proj_file_path.write('PXP_path : "'+self.PXP_file_explorer.line_edit.text()+'"\n')
+            proj_file_path.write('SSP_path : "'+self.SSP_file_explorer.line_edit.text()+'"\n')
+            proj_file_path.write('OBS_path : "'+self.OBS_file_explorer.line_edit.text()+'"\n')
+        print("SAVE")
+
     def get_path_list(self):
         return [self.ANT_file_explorer.line_edit.text(), self.PXP_file_explorer.line_edit.text(), self.SSP_file_explorer.line_edit.text(), self.OBS_file_explorer.line_edit.text()]
 
@@ -174,7 +266,7 @@ class MainWindow(QMainWindow):
 if __name__ == '__main__':
     # jl.println("Hello from Julia!")
 
-    # z, v, nz_st, numz = jl.SeaGap.read_prof("../example_hugo/ss_prof.inp",3.0)
+    # z, v, nz_st, numz = jl.SeaGap.read_prof("../data/ss_prof.inp",3.0)
     # print(z)
     # Create the Qt Application
     app = QApplication()

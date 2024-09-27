@@ -69,9 +69,10 @@ class DoubleSelector(QVBoxLayout):
             return
 
 class FileExplorerLayout(QVBoxLayout):
-    def __init__(self, label, req=True, default_text="", *args, **kwargs):
+    def __init__(self, label, req=True, default_text="", default_path="", *args, **kwargs):
         super(FileExplorerLayout, self).__init__(*args, **kwargs)
         self.label = label
+        self.default_path = default_path
 
         self.addWidget(QLabel(self.label+" :"))
 
@@ -91,12 +92,15 @@ class FileExplorerLayout(QVBoxLayout):
     def open_file_dialog(self):
         dlg = QFileDialog()
         dlg.setWindowTitle("Select " + self.label + " File")
+        if self.default_path != "" :
+            dlg.setDirectory(self.default_path)
         self.line_edit.setText(dlg.getOpenFileName()[0])
 
 class FolderExplorerLayout(QVBoxLayout):
-    def __init__(self, label, req=True, default_text="", *args, **kwargs):
+    def __init__(self, label, req=True, default_text="", default_path="", *args, **kwargs):
         super(FolderExplorerLayout, self).__init__(*args, **kwargs)
         self.label = label
+        self.default_path = default_path
 
         self.addWidget(QLabel(self.label+" :"))
 
@@ -116,4 +120,6 @@ class FolderExplorerLayout(QVBoxLayout):
     def open_folder_dialog(self):
         dlg = QFileDialog()
         dlg.setWindowTitle("Select " + self.label + " Folder")
+        if self.default_path != "" :
+            dlg.setDirectory(self.default_path)
         self.line_edit.setText(dlg.getExistingDirectory())

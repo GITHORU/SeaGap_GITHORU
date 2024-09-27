@@ -1,11 +1,73 @@
-from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QDialogButtonBox
+from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QDialogButtonBox, QLineEdit
 from customLayout import DoubleSelector, IntSelector, FolderExplorerLayout
 from PySide6.QtGui import QIcon, QPixmap
 import shutil, os
 from PySide6.QtCore import Qt
 import juliacall
 
-from os.path import exists
+from os.path import exists, join
+
+
+class NewProjectDialog(QDialog):
+
+    def __init__(self):
+        super().__init__()
+
+
+        self.proj_file_path = ""
+
+        my_icon = QIcon("./img/logo.png")
+        self.setWindowIcon(my_icon)
+
+        self.main_layout = QVBoxLayout()
+
+        name_label = QLabel("New project name")
+        self.proj_name_line_edit = QLineEdit()
+        self.proj_name_line_edit.setPlaceholderText("*required")
+        self.folder_layout = FolderExplorerLayout("New project folder", req=True)
+        QBtn = (
+                QDialogButtonBox.Ok | QDialogButtonBox.Cancel
+        )
+        self.buttonBox = QDialogButtonBox(QBtn)
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.reject)
+
+        self.main_layout.addWidget(name_label)
+        self.main_layout.addWidget(self.proj_name_line_edit)
+        self.main_layout.addLayout(self.folder_layout)
+        self.main_layout.addWidget(self.buttonBox)
+
+        self.setLayout(self.main_layout)
+
+    def accept(self):
+        print("ACCEPTED !")
+        if self.proj_name_line_edit.text() == "" and self.folder_layout.line_edit.text() == "" :
+            print("lacking necessary parameters")
+            super().reject()
+        proj_folder_path = self.folder_layout.line_edit.text()
+        proj_name = self.proj_name_line_edit.text()
+        proj_path = join(proj_folder_path, proj_name)
+        os.makedirs(proj_path)
+        # try :
+        with open(join(proj_path, proj_name+".prj"), "w") as prj_file :
+            prj_file.write('---\n')
+            prj_file.write('base_path : "'+proj_path+'"\n')
+            prj_file.write('proj_name : "'+proj_name+'"\n')
+            prj_file.write('ANT_path : "'+'"\n')
+            prj_file.write('PXP_path : "'+'"\n')
+            prj_file.write('SSP_path : "'+'"\n')
+            prj_file.write('OBS_path : "'+'"\n')
+        os.makedirs(join(proj_path, "gui_tmp"))
+        self.proj_file_path = join(proj_path, proj_name+".prj")
+
+        # except :
+        #     print("error while creating new project")
+        #     super().reject()
+
+        super().accept()
+
+
+
 
 class DenoiseDialog(QDialog):
     
