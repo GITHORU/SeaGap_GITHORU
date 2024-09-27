@@ -196,6 +196,7 @@ class TtresDialog(QDialog):
         self.layout = QHBoxLayout()
 
         self.input_layout = QVBoxLayout()
+        self.input_layout.setAlignment(Qt.AlignTop)
 
         self.lat_selector = DoubleSelector(-89.99, 89.99, "Latitude", True)
         self.input_layout.addLayout(self.lat_selector)
@@ -257,6 +258,93 @@ class TtresDialog(QDialog):
             pass
         super().reject()
 
+class MCMCGradVPlotDialog(QDialog):
+
+    def __init__(self, l_path, jl):
+        super().__init__()
+
+        self.setWindowTitle("MCMC Grad V plot")
+        my_icon = QIcon("./img/logo.png")
+        self.setWindowIcon(my_icon)
+
+        self.l_path = l_path
+        self.jl = jl
+
+        self.layout = QHBoxLayout()
+
+        self.input_layout = QVBoxLayout()
+        self.input_layout.setAlignment(Qt.AlignTop)
+
+        self.fig_layout = QHBoxLayout()
+
+        self.folder_selector = FolderExplorerLayout("MCMC Grad V results folder", req=True)
+        self.input_layout.addLayout(self.folder_selector)
+
+        self.nshuffle_selector = IntSelector(1, 999999999, "number of plots for each parameter", req=True, backText="0 < nshuffle < nb iteration/NA")
+        self.input_layout.addLayout(self.nshuffle_selector)
+
+        self.NA_selector = IntSelector(1, 9999999, "Sampling interval of the MCMC prcessing", req=False, backText="(def : 5)")
+        self.input_layout.addLayout(self.NA_selector)
+
+
+        self.layout.addLayout(self.input_layout)
+
+        self.graph_img1 = QLabel()
+        self.fig_layout.addWidget(self.graph_img1)
+
+        self.graph_img2 = QLabel()
+        self.fig_layout.addWidget(self.graph_img2)
+
+        self.layout.addLayout(self.fig_layout)
+
+        self.run_mcmcgradv_plot_button = QPushButton("Run MCMC Grad V plot")
+        self.run_mcmcgradv_plot_button.clicked.connect(self.run_mcmcgradv_plot)
+        self.input_layout.addWidget(self.run_mcmcgradv_plot_button)
+
+        QBtn = (
+                QDialogButtonBox.Ok
+        )
+
+        self.buttonBox = QDialogButtonBox(QBtn)
+        self.buttonBox.setDisabled(True)
+        self.buttonBox.accepted.connect(self.accept)
+
+        self.setLayout(self.layout)
+
+    def run_mcmcgradv_plot(self):
+        self.graph_img1.clear()
+        self.graph_img1.repaint()
+        self.graph_img2.clear()
+        self.graph_img2.repaint()
+        if self.folder_selector.line_edit.text() == "" and self.nshuffle_selector.line_edit.text() == "":
+            print("lacking folder")
+            return
+        nshuffle = int(self.nshuffle_selector.line_edit.text())
+        if self.NA_selector.line_edit.text() != "":
+            NA = int(self.NA_selector.line_edit.text())
+        else:
+            NA = 5
+
+        print(NA)
+
+        path_ANT, path_PXP, path_SSP, path_OBS = self.l_path
+        mcmcgradv_folder = self.folder_selector.line_edit.text()
+
+        self.jl.SeaGap.plot_mcmcres_gradv(nshuffle=nshuffle, fn=join(mcmcgradv_folder, "static_array_mcmcgradv_mcmc.out"), show=False, fno=join(mcmcgradv_folder, "static_array_mcmcgradv_resfig.png")) #, fno="gui_tmp/test.png"
+
+        self.jl.SeaGap.plot_mcmcparam_gradv(NA, nshuffle=nshuffle, fn=join(mcmcgradv_folder, "static_array_mcmcgradv_sample.out"), show=False, fno=join(mcmcgradv_folder, "static_array_mcmcgradv_paramfig.png")) #, fno="gui_tmp/test.png"
+
+        pixmap1 = QPixmap(join(mcmcgradv_folder, "static_array_mcmcgradv_resfig.png"))
+        self.graph_img1.setPixmap(
+            pixmap1.scaled(pixmap1.width() // 1, pixmap1.height() // 1, Qt.AspectRatioMode.KeepAspectRatio))
+        self.graph_img1.repaint()
+        #
+        pixmap2 = QPixmap(join(mcmcgradv_folder, "static_array_mcmcgradv_paramfig.png"))
+        self.graph_img2.setPixmap(
+            pixmap2.scaled(pixmap2.width() // 1, pixmap2.height() // 1, Qt.AspectRatioMode.KeepAspectRatio))
+        self.graph_img2.repaint()
+
+
 
 class StaticArrayDialog(QDialog):
 
@@ -273,6 +361,7 @@ class StaticArrayDialog(QDialog):
         self.layout = QHBoxLayout()
 
         self.input_layout = QVBoxLayout()
+        self.input_layout.setAlignment(Qt.AlignTop)
 
         self.lat_selector = DoubleSelector(-89.99, 89.99, "Latitude", True)
         self.input_layout.addLayout(self.lat_selector)
@@ -370,6 +459,7 @@ class StaticArrayGradDialog(QDialog):
         self.layout = QHBoxLayout()
 
         self.input_layout = QVBoxLayout()
+        self.input_layout.setAlignment(Qt.AlignTop)
 
         self.lat_selector = DoubleSelector(-89.99, 89.99, "Latitude", True)
         self.input_layout.addLayout(self.lat_selector)
@@ -584,7 +674,10 @@ class StaticArrayMCMCGradVDialog(QDialog):
 
         self.layout = QHBoxLayout()
 
+        self.fig_layout = QHBoxLayout()
+
         self.input_layout = QVBoxLayout()
+        self.input_layout.setAlignment(Qt.AlignTop)
 
         self.lat_selector = DoubleSelector(-89.99, 89.99, "Latitude", True)
         self.input_layout.addLayout(self.lat_selector)
@@ -634,9 +727,6 @@ class StaticArrayMCMCGradVDialog(QDialog):
         self.nburn_selector = IntSelector(3, 999999999, "Burn-in period of the MCMC iterations", False, backText="(def : 100000)")
         self.input_layout.addLayout(self.nburn_selector)
 
-        self.NA_selector = IntSelector(1, 999999999, "Number of the sampling interval", False, backText="(def : 5)")
-        self.input_layout.addLayout(self.NA_selector)
-
         self.folder_selector = FolderExplorerLayout("Static array MCMC grad folder")
         self.input_layout.addLayout(self.folder_selector)
 
@@ -644,9 +734,14 @@ class StaticArrayMCMCGradVDialog(QDialog):
         self.run_static_array_mcmcgradv_button.clicked.connect(self.run_static_array_mcmcgradv)
         self.input_layout.addWidget(self.run_static_array_mcmcgradv_button)
 
-        self.graph_img = QLabel()
         self.layout.addLayout(self.input_layout)
-        self.layout.addWidget(self.graph_img)
+
+        self.graph_img1 = QLabel()
+        self.fig_layout.addWidget(self.graph_img1)
+        self.graph_img2 = QLabel()
+        self.fig_layout.addWidget(self.graph_img2)
+
+        self.layout.addLayout(self.fig_layout)
 
         QBtn = (
                 QDialogButtonBox.Ok
@@ -661,8 +756,12 @@ class StaticArrayMCMCGradVDialog(QDialog):
         self.setLayout(self.layout)
 
     def run_static_array_mcmcgradv(self):
+        self.graph_img1.clear()
+        self.graph_img1.repaint()
+        self.graph_img2.clear()
+        self.graph_img2.repaint()
         if self.lat_selector.line_edit.text() == "" or self.TR_DEPTH_selector.line_edit.text() == "" or self.folder_selector.line_edit.text() == "" or self.dep_selector.line_edit.text() == "":
-            print("lacking static array MCMC grad parameters")
+            print("lacking static array MCMC grad V parameters")
             return
 
         if not exists(self.folder_selector.line_edit.text()):
@@ -732,6 +831,8 @@ class StaticArrayMCMCGradVDialog(QDialog):
         # else:
         #     lscale = 1.0
 
+        nshuffle = (nloop-nburn)//5-1
+
 
         log_path = os.path.join(folder_path, "static_array_mcmcgradv_log.out")
         sample_path = os.path.join(folder_path, "static_array_mcmcgradv_sample.out")
@@ -743,10 +844,26 @@ class StaticArrayMCMCGradVDialog(QDialog):
         bspline_path = os.path.join(folder_path, "static_array_mcmcgradv_bspline.out")
         gradient_path = os.path.join(folder_path, "static_array_mcmcgradv_gradient.out")
         initial_path = os.path.join(folder_path, "static_array_mcmcgradv_initial.out")
+        resfig_path = os.path.join(folder_path, "static_array_mcmcgradv_resfig.png")
+        paramfig_path = os.path.join(folder_path, "static_array_mcmcgradv_paramfig.png")
 
         self.jl.SeaGap.static_array_s(lat, juliacall.convert(self.jl.Vector[self.jl.Float64], [TR_DEPTH]), 0.0, NPB1, NPB2, fn1=path_ANT, fn2=path_PXP, fn3=path_SSP, fn4=path_OBS, fno0="gui_tmp/tmp_static_array_s_log.txt",fno1="gui_tmp/tmp_static_array_s_solve.out",fno2="gui_tmp/tmp_static_array_s_position.out",fno3="gui_tmp/tmp_static_array_s_residual_sdls.out",fno4="gui_tmp/tmp_static_array_s_S-NTD.out",fno5="gui_tmp/tmp_static_array_s_ABIC.out",fno6="gui_tmp/tmp_static_array_s_gradient.out")
         self.jl.SeaGap.make_initial_gradv(NPB1, NPB2, fn="gui_tmp/tmp_static_array_s_solve.out", fno="gui_tmp/tmp_static_array_s_initial.inp")
         self.jl.SeaGap.static_array_mcmcgradv(lat, dep, juliacall.convert(self.jl.Vector[self.jl.Float64], [TR_DEPTH]), NPB1, NPB2, NPB3, NPB4, gm=gm, gs=gs, dm=dm, ds=ds, rm=rm, rs=rs, nloop=nloop, nburn=nburn, fn1=path_ANT, fn2=path_PXP, fn3=path_SSP, fn4=path_OBS, fn5="gui_tmp/tmp_static_array_s_initial.inp", fno0=log_path, fno1=sample_path, fno2=mcmc_path, fno3=position_path, fno4=statistics_path, fno5=acceptance_path, fno6=residual_path, fno7=bspline_path, fno8=gradient_path, fno9=initial_path)
+
+        self.jl.SeaGap.plot_mcmcres_gradv(nshuffle=nshuffle, fn=mcmc_path, show=False, fno=resfig_path) #, fno="gui_tmp/test.png"
+
+        self.jl.SeaGap.plot_mcmcparam_gradv(5, nshuffle=nshuffle, fn=sample_path, show=False, fno=paramfig_path) #, fno="gui_tmp/test.png"
+
+        pixmap1 = QPixmap(resfig_path)
+        self.graph_img1.setPixmap(
+            pixmap1.scaled(pixmap1.width() // 1, pixmap1.height() // 1, Qt.AspectRatioMode.KeepAspectRatio))
+        self.graph_img1.repaint()
+        #
+        pixmap2 = QPixmap(paramfig_path)
+        self.graph_img2.setPixmap(
+            pixmap2.scaled(pixmap2.width() // 1, pixmap2.height() // 1, Qt.AspectRatioMode.KeepAspectRatio))
+        self.graph_img2.repaint()
 
         self.buttonBox.setDisabled(False)
 
@@ -817,6 +934,7 @@ class StaticIndividualDialog(QDialog):
         self.layout = QHBoxLayout()
 
         self.input_layout = QVBoxLayout()
+        self.input_layout.setAlignment(Qt.AlignTop)
 
         self.lat_selector = DoubleSelector(-89.99, 89.99, "Latitude", True)
         self.input_layout.addLayout(self.lat_selector)

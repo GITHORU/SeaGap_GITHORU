@@ -3,7 +3,8 @@ from PySide6.QtGui import QIcon, QAction
 import sys
 from os.path import exists, join
 
-from GUI.customDialogs import DenoiseDialog, StaticArrayDialog,StaticArrayGradDialog, StaticArrayMCMCGradVDialog, StaticIndividualDialog, NewProjectDialog, TtresDialog
+from GUI.customDialogs import DenoiseDialog, StaticArrayDialog, StaticArrayGradDialog, StaticArrayMCMCGradVDialog, \
+    StaticIndividualDialog, NewProjectDialog, TtresDialog, MCMCGradVPlotDialog
 from customLayout import FileExplorerLayout
 
 import yaml, os
@@ -124,6 +125,11 @@ class MainWindow(QMainWindow):
         self.plotting_tab_layout.addWidget(self.ttres_Button)
 
 
+        self.mcmcgradvplot_Button = QPushButton("MCMC Grad V plot")
+        self.mcmcgradvplot_Button.clicked.connect(self.run_mcmcgradvplot_dlg)
+        self.plotting_tab_layout.addWidget(self.mcmcgradvplot_Button)
+
+
 
         self.plotting_tab.setLayout(self.plotting_tab_layout)
 
@@ -241,6 +247,16 @@ class MainWindow(QMainWindow):
             print("Paths not valid")
             return
         ttres_dlg = TtresDialog(l_path, jl)
+        ttres_dlg.exec()
+        print("END END END")
+
+
+    def run_mcmcgradvplot_dlg(self):
+        l_path = self.get_path_list()
+        # if not is_path_list_valid(l_path):
+        #     print("Paths not valid")
+        #     return
+        ttres_dlg = MCMCGradVPlotDialog(l_path, jl)
         ttres_dlg.exec()
         print("END END END")
 
