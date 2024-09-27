@@ -25,9 +25,11 @@ class NewProjectDialog(QDialog):
         self.proj_name_line_edit = QLineEdit()
         self.proj_name_line_edit.setPlaceholderText("*required")
         self.folder_layout = FolderExplorerLayout("New project folder", req=True)
+
         QBtn = (
                 QDialogButtonBox.Ok | QDialogButtonBox.Cancel
         )
+
         self.buttonBox = QDialogButtonBox(QBtn)
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
@@ -174,6 +176,83 @@ class DenoiseDialog(QDialog):
             os.remove("gui_tmp/tmp_denoise_obs.inp")
             os.remove("gui_tmp/tmp_denoise.out")
             os.remove("gui_tmp/tmp_denoise.png")
+        except :
+            pass
+        super().reject()
+
+
+class TtresDialog(QDialog):
+
+    def __init__(self, l_path, jl):
+        super().__init__()
+
+        self.setWindowTitle("ttres")
+        my_icon = QIcon("./img/logo.png")
+        self.setWindowIcon(my_icon)
+
+        self.l_path = l_path
+        self.jl = jl
+
+        self.layout = QHBoxLayout()
+
+        self.input_layout = QVBoxLayout()
+
+        self.lat_selector = DoubleSelector(-89.99, 89.99, "Latitude", True)
+        self.input_layout.addLayout(self.lat_selector)
+
+        self.TR_DEPTH_selector = DoubleSelector(0, 99999.0, "Surface transducer depth", True)
+        self.input_layout.addLayout(self.TR_DEPTH_selector)
+
+        self.run_ttres_button = QPushButton("Plot")
+        self.run_ttres_button.clicked.connect(self.run_ttres)
+        self.input_layout.addWidget(self.run_ttres_button)
+
+        self.graph_img = QLabel()
+        self.layout.addLayout(self.input_layout)
+        self.layout.addWidget(self.graph_img)
+
+        self.setLayout(self.layout)
+
+    def run_ttres(self):
+        self.graph_img.clear()
+        self.graph_img.repaint()
+        if self.lat_selector.line_edit.text() == "" or self.TR_DEPTH_selector.line_edit.text() == "":
+            print("lacking denoise parameters")
+            return
+
+        lat = float(self.lat_selector.line_edit.text())
+        TR_DEPTH = float(self.TR_DEPTH_selector.line_edit.text())
+        path_ANT, path_PXP, path_SSP, path_OBS = self.l_path
+
+        self.jl.SeaGap.ttres(lat, TR_DEPTH, fn1=path_ANT, fn2=path_PXP, fn3=path_SSP, fn4=path_OBS, fno="gui_tmp/tmp_ttres_ttres.out", fno0="gui_tmp/tmp_ttres_log.txt", save=True)
+        self.jl.SeaGap.plot_ttres(fn="gui_tmp/tmp_ttres_ttres.png", fn0="gui_tmp/tmp_ttres_ttres.out", show=False)
+        pixmap = QPixmap("gui_tmp/tmp_ttres_ttres.png")
+        self.graph_img.setPixmap(
+            pixmap.scaled(pixmap.width() // 1.5, pixmap.height() // 1.5, Qt.AspectRatioMode.KeepAspectRatio))
+        self.graph_img.repaint()
+
+    def accept(self):
+        print("ACCEPTED !")
+        try :
+            os.remove("gui_tmp/tmp_ttres_ttres.png")
+            os.remove("gui_tmp/tmp_ttres_ttres.out")
+            os.remove("gui_tmp/tmp_ttres_log.txt")
+        except :
+            pass
+        super().accept()
+
+    def reject(self):
+        print("REJECTED !")
+        try :
+            os.remove("gui_tmp/tmp_ttres_ttres.png")
+        except :
+            pass
+        try :
+            os.remove("gui_tmp/tmp_ttres_ttres.out")
+        except :
+            pass
+        try :
+            os.remove("gui_tmp/tmp_ttres_log.txt")
         except :
             pass
         super().reject()
@@ -665,11 +744,62 @@ class StaticArrayMCMCGradVDialog(QDialog):
         gradient_path = os.path.join(folder_path, "static_array_mcmcgradv_gradient.out")
         initial_path = os.path.join(folder_path, "static_array_mcmcgradv_initial.out")
 
-        self.jl.SeaGap.static_array_s(lat, juliacall.convert(self.jl.Vector[self.jl.Float64], [TR_DEPTH]), 0.0, NPB1, NPB2, fn1=path_ANT, fn2=path_PXP, fn3=path_SSP, fn4=path_OBS, fno0="gui_tmp/static_array_s_log.txt",fno1="gui_tmp/static_array_s_solve.out",fno2="gui_tmp/static_array_s_position.out",fno3="gui_tmp/static_array_s_residual_sdls.out",fno4="gui_tmp/static_array_s_S-NTD.out",fno5="gui_tmp/static_array_s_ABIC.out",fno6="gui_tmp/static_array_s_gradient.out")
-        self.jl.SeaGap.make_initial_gradv(NPB1, NPB2, fn="gui_tmp/static_array_s_solve.out", fno="gui_tmp/static_array_s_initial.inp")
-        self.jl.SeaGap.static_array_mcmcgradv(lat, dep, juliacall.convert(self.jl.Vector[self.jl.Float64], [TR_DEPTH]), NPB1, NPB2, NPB3, NPB4, gm=gm, gs=gs, dm=dm, ds=ds, rm=rm, rs=rs, nloop=nloop, nburn=nburn, fn1=path_ANT, fn2=path_PXP, fn3=path_SSP, fn4=path_OBS, fn5="gui_tmp/static_array_s_initial.inp", fno0=log_path, fno1=sample_path, fno2=mcmc_path, fno3=position_path, fno4=statistics_path, fno5=acceptance_path, fno6=residual_path, fno7=bspline_path, fno8=gradient_path, fno9=initial_path)
+        self.jl.SeaGap.static_array_s(lat, juliacall.convert(self.jl.Vector[self.jl.Float64], [TR_DEPTH]), 0.0, NPB1, NPB2, fn1=path_ANT, fn2=path_PXP, fn3=path_SSP, fn4=path_OBS, fno0="gui_tmp/tmp_static_array_s_log.txt",fno1="gui_tmp/tmp_static_array_s_solve.out",fno2="gui_tmp/tmp_static_array_s_position.out",fno3="gui_tmp/tmp_static_array_s_residual_sdls.out",fno4="gui_tmp/tmp_static_array_s_S-NTD.out",fno5="gui_tmp/tmp_static_array_s_ABIC.out",fno6="gui_tmp/tmp_static_array_s_gradient.out")
+        self.jl.SeaGap.make_initial_gradv(NPB1, NPB2, fn="gui_tmp/tmp_static_array_s_solve.out", fno="gui_tmp/tmp_static_array_s_initial.inp")
+        self.jl.SeaGap.static_array_mcmcgradv(lat, dep, juliacall.convert(self.jl.Vector[self.jl.Float64], [TR_DEPTH]), NPB1, NPB2, NPB3, NPB4, gm=gm, gs=gs, dm=dm, ds=ds, rm=rm, rs=rs, nloop=nloop, nburn=nburn, fn1=path_ANT, fn2=path_PXP, fn3=path_SSP, fn4=path_OBS, fn5="gui_tmp/tmp_static_array_s_initial.inp", fno0=log_path, fno1=sample_path, fno2=mcmc_path, fno3=position_path, fno4=statistics_path, fno5=acceptance_path, fno6=residual_path, fno7=bspline_path, fno8=gradient_path, fno9=initial_path)
 
         self.buttonBox.setDisabled(False)
+
+    def accept(self):
+        print("ACCEPTED !")
+        try :
+            os.remove("gui_tmp/tmp_static_array_s_log.txt")
+            os.remove("gui_tmp/tmp_static_array_s_solve.out")
+            os.remove("gui_tmp/tmp_static_array_s_position.out")
+            os.remove("gui_tmp/tmp_static_array_s_residual_sdls.out")
+            os.remove("gui_tmp/tmp_static_array_s_S-NTD.out")
+            os.remove("gui_tmp/tmp_static_array_s_ABIC.out")
+            os.remove("gui_tmp/tmp_static_array_s_gradient.out")
+            os.remove("gui_tmp/tmp_static_array_s_initial.inp")
+        except :
+            pass
+        super().accept()
+
+    def reject(self):
+        print("REJECTED !")
+        try :
+            os.remove("gui_tmp/tmp_static_array_s_log.txt")
+        except :
+            pass
+        try :
+            os.remove("gui_tmp/tmp_static_array_s_solve.out")
+        except :
+            pass
+        try :
+            os.remove("gui_tmp/tmp_static_array_s_position.out")
+        except :
+            pass
+        try :
+            os.remove("gui_tmp/tmp_static_array_s_residual_sdls.out")
+        except :
+            pass
+        try :
+            os.remove("gui_tmp/tmp_static_array_s_S-NTD.out")
+        except :
+            pass
+        try :
+            os.remove("gui_tmp/tmp_static_array_s_ABIC.out")
+        except :
+            pass
+        try :
+            os.remove("gui_tmp/tmp_static_array_s_gradient.out")
+        except :
+            pass
+        try :
+            os.remove("gui_tmp/tmp_static_array_s_initial.inp")
+        except :
+            pass
+        super().reject()
 
 
 class StaticIndividualDialog(QDialog):
