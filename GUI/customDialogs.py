@@ -1,5 +1,6 @@
-from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QDialogButtonBox, QLineEdit
-from customLayout import DoubleSelector, IntSelector, FolderExplorerLayout
+from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QDialogButtonBox, QLineEdit, \
+    QStatusBar
+from customLayout import DoubleSelector, IntSelector, FolderExplorerLayout, FileExplorerLayout
 from PySide6.QtGui import QIcon, QPixmap
 import shutil, os
 from PySide6.QtCore import Qt
@@ -7,12 +8,15 @@ import juliacall
 
 from os.path import exists, join
 
+from GARPOS2SeaGap import GARPOS2SeaGap
+
 
 class NewProjectDialog(QDialog):
 
     def __init__(self):
         super().__init__()
 
+        self.statusbar = QStatusBar(self)
 
         self.proj_file_path = ""
 
@@ -39,18 +43,20 @@ class NewProjectDialog(QDialog):
         self.main_layout.addLayout(self.folder_layout)
         self.main_layout.addWidget(self.buttonBox)
 
+        self.main_layout.addWidget(self.statusbar)
+
         self.setLayout(self.main_layout)
 
     def accept(self):
-        print("ACCEPTED !")
         if self.proj_name_line_edit.text() == "" and self.folder_layout.line_edit.text() == "" :
-            print("lacking necessary parameters")
+            print("Lacking necessary parameters")
+            self.statusbar.showMessage("Lacking necessary parameters")
             super().reject()
         proj_folder_path = self.folder_layout.line_edit.text()
         proj_name = self.proj_name_line_edit.text()
         proj_path = join(proj_folder_path, proj_name)
         os.makedirs(proj_path)
-        # try :
+
         with open(join(proj_path, proj_name+".prj"), "w") as prj_file :
             prj_file.write('---\n')
             prj_file.write('base_path : "'+proj_path+'"\n')
@@ -62,9 +68,6 @@ class NewProjectDialog(QDialog):
         os.makedirs(join(proj_path, "gui_tmp"))
         self.proj_file_path = join(proj_path, proj_name+".prj")
 
-        # except :
-        #     print("error while creating new project")
-        #     super().reject()
 
         super().accept()
 
@@ -76,6 +79,7 @@ class DenoiseDialog(QDialog):
     def __init__(self, l_path, jl):
         super().__init__()
 
+        self.statusbar = QStatusBar(self)
         self.setWindowTitle("Denoise")
         my_icon = QIcon("./img/logo.png")
         self.setWindowIcon(my_icon)
@@ -108,6 +112,8 @@ class DenoiseDialog(QDialog):
         self.run_denoise_button.clicked.connect(self.run_denoise)
         self.input_layout.addWidget(self.run_denoise_button)
 
+        self.input_layout.addWidget(self.statusbar)
+
         self.graph_img = QLabel()
         self.layout.addLayout(self.input_layout)
         self.layout.addWidget(self.graph_img)
@@ -129,7 +135,8 @@ class DenoiseDialog(QDialog):
         self.graph_img.clear()
         self.graph_img.repaint()
         if self.lat_selector.line_edit.text() == "" or self.TR_DEPTH_selector.line_edit.text() == "" :
-            print("lacking denoise parameters")
+            print("Lacking denoise parameters")
+            self.statusbar.showMessage("Lacking denoise parameters")
             return
 
         path_ANT, path_PXP, path_SSP, self.path_OBS_ori = self.l_path
@@ -159,8 +166,79 @@ class DenoiseDialog(QDialog):
 
         self.buttonBox.setDisabled(False)
 
+class FromGARPOSDialog(QDialog):
+
+    def __init__(self):
+        super().__init__()
+
+        self.statusbar = QStatusBar(self)
+        self.setWindowTitle("From GARPOS ...")
+        my_icon = QIcon("./img/logo.png")
+        self.setWindowIcon(my_icon)
+
+        self.layout = QHBoxLayout()
+
+        self.input_layout = QVBoxLayout()
+
+        self.OBS_selector = FileExplorerLayout("GARPOS OBS file", req=True)
+        self.input_layout.addLayout(self.OBS_selector)
+
+        self.SVP_selector = FileExplorerLayout("GARPOS SVP file", req=True)
+        self.input_layout.addLayout(self.SVP_selector)
+
+        self.INI_selector = FileExplorerLayout("GARPOS INI file", req=True)
+        self.input_layout.addLayout(self.INI_selector)
+
+        self.SeaGap_folder_selector = FolderExplorerLayout("output SeaGap files folder", req=True)
+        self.input_layout.addLayout(self.SeaGap_folder_selector)
+
+        self.prefix = QLineEdit("fromGARPOS_")
+        self.input_layout.addWidget(self.prefix)
+
+        self.run_convert_button = QPushButton("Convert")
+        self.run_convert_button.clicked.connect(self.run_convert)
+        self.input_layout.addWidget(self.run_convert_button)
+        self.layout.addLayout(self.input_layout)
+        # self.layout.addWidget(self.graph_img)
+
+        QBtn = (
+                QDialogButtonBox.Ok
+        )
+
+        self.buttonBox = QDialogButtonBox(QBtn)
+        self.buttonBox.setDisabled(True)
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.reject)
+
+        self.input_layout.addWidget(self.buttonBox)
+        self.input_layout.addWidget(self.statusbar)
+
+        self.setLayout(self.layout)
+
+
+    def run_convert(self):
+        if self.OBS_selector.line_edit.text() == "" or self.SVP_selector.line_edit.text() == "" or self.INI_selector.line_edit.text() == "" or self.SeaGap_folder_selector.line_edit.text() == "":
+            print("Lacking converter parameters")
+            self.statusbar.showMessage("Lacking converter parameters")
+            return
+
+        path_OBS = self.OBS_selector.line_edit.text()
+        path_SVP = self.SVP_selector.line_edit.text()
+        path_INI = self.INI_selector.line_edit.text()
+        SG_folder = self.SeaGap_folder_selector.line_edit.text()
+        prefix = self.prefix.text()
+
+        path_SG_PXP = join(SG_folder, prefix+"pxp-ini.inp")
+        path_SG_OBS = join(SG_folder, prefix+"obsdata.inp")
+        path_SG_SSP = join(SG_folder, prefix+"ss_prof.inp")
+        path_SG_ANT = join(SG_folder, prefix+"tr-ant.inp")
+
+        GARPOS2SeaGap(path_OBS, path_SVP, path_INI, path_SG_PXP, path_SG_OBS, path_SG_SSP, path_SG_ANT)
+        self.buttonBox.setDisabled(False)
+
+
+
     def accept(self):
-        print("ACCEPTED !")
         try :
             shutil.copyfile("gui_tmp/tmp_denoise_obs.inp", self.path_OBS_ori)
             os.remove("gui_tmp/tmp_denoise_obs.inp")
@@ -171,7 +249,6 @@ class DenoiseDialog(QDialog):
         super().accept()
 
     def reject(self):
-        print("REJECTED !")
         try :
             os.remove("gui_tmp/tmp_denoise_obs.inp")
             os.remove("gui_tmp/tmp_denoise.out")
@@ -186,6 +263,7 @@ class TtresDialog(QDialog):
     def __init__(self, l_path, jl):
         super().__init__()
 
+        self.statusbar = QStatusBar(self)
         self.setWindowTitle("ttres")
         my_icon = QIcon("./img/logo.png")
         self.setWindowIcon(my_icon)
@@ -208,6 +286,8 @@ class TtresDialog(QDialog):
         self.run_ttres_button.clicked.connect(self.run_ttres)
         self.input_layout.addWidget(self.run_ttres_button)
 
+        self.input_layout.addWidget(self.statusbar)
+
         self.graph_img = QLabel()
         self.layout.addLayout(self.input_layout)
         self.layout.addWidget(self.graph_img)
@@ -218,7 +298,8 @@ class TtresDialog(QDialog):
         self.graph_img.clear()
         self.graph_img.repaint()
         if self.lat_selector.line_edit.text() == "" or self.TR_DEPTH_selector.line_edit.text() == "":
-            print("lacking denoise parameters")
+            print("Lacking denoise parameters")
+            self.statusbar.showMessage("Lacking denoise parameters")
             return
 
         lat = float(self.lat_selector.line_edit.text())
@@ -233,7 +314,6 @@ class TtresDialog(QDialog):
         self.graph_img.repaint()
 
     def accept(self):
-        print("ACCEPTED !")
         try :
             os.remove("gui_tmp/tmp_ttres_ttres.png")
             os.remove("gui_tmp/tmp_ttres_ttres.out")
@@ -243,7 +323,6 @@ class TtresDialog(QDialog):
         super().accept()
 
     def reject(self):
-        print("REJECTED !")
         try :
             os.remove("gui_tmp/tmp_ttres_ttres.png")
         except :
@@ -263,6 +342,7 @@ class MCMCGradVPlotDialog(QDialog):
     def __init__(self, l_path, jl):
         super().__init__()
 
+        self.statusbar = QStatusBar(self)
         self.setWindowTitle("MCMC Grad V plot")
         my_icon = QIcon("./img/logo.png")
         self.setWindowIcon(my_icon)
@@ -301,6 +381,8 @@ class MCMCGradVPlotDialog(QDialog):
         self.run_mcmcgradv_plot_button.clicked.connect(self.run_mcmcgradv_plot)
         self.input_layout.addWidget(self.run_mcmcgradv_plot_button)
 
+        self.input_layout.addWidget(self.statusbar)
+
         QBtn = (
                 QDialogButtonBox.Ok
         )
@@ -317,15 +399,14 @@ class MCMCGradVPlotDialog(QDialog):
         self.graph_img2.clear()
         self.graph_img2.repaint()
         if self.folder_selector.line_edit.text() == "" and self.nshuffle_selector.line_edit.text() == "":
-            print("lacking folder")
+            print("Lacking folder")
+            self.statusbar.showMessage("Lacking folder")
             return
         nshuffle = int(self.nshuffle_selector.line_edit.text())
         if self.NA_selector.line_edit.text() != "":
             NA = int(self.NA_selector.line_edit.text())
         else:
             NA = 5
-
-        print(NA)
 
         path_ANT, path_PXP, path_SSP, path_OBS = self.l_path
         mcmcgradv_folder = self.folder_selector.line_edit.text()
@@ -351,6 +432,7 @@ class StaticArrayDialog(QDialog):
     def __init__(self, l_path, jl):
         super().__init__()
 
+        self.statusbar = QStatusBar(self)
         self.setWindowTitle("Static array")
         my_icon = QIcon("./img/logo.png")
         self.setWindowIcon(my_icon)
@@ -388,6 +470,8 @@ class StaticArrayDialog(QDialog):
         self.run_static_array_button.clicked.connect(self.run_static_array)
         self.input_layout.addWidget(self.run_static_array_button)
 
+        self.input_layout.addWidget(self.statusbar)
+
         self.graph_img = QLabel()
         self.layout.addLayout(self.input_layout)
         self.layout.addWidget(self.graph_img)
@@ -407,10 +491,12 @@ class StaticArrayDialog(QDialog):
     def run_static_array(self):
         if self.lat_selector.line_edit.text() == "" or self.TR_DEPTH_selector.line_edit.text() == "" or self.folder_selector.line_edit.text() == "":
             print("lacking static array parameters")
+            self.statusbar.showMessage("Lacking static array parameters")
             return
 
         if not exists(self.folder_selector.line_edit.text()):
-            print("wrong path entered")
+            print("Wrong path entered")
+            self.statusbar.showMessage("Wrong path entered")
             return
 
         path_ANT, path_PXP, path_SSP, path_OBS = self.l_path
@@ -449,6 +535,7 @@ class StaticArrayGradDialog(QDialog):
     def __init__(self, l_path, jl):
         super().__init__()
 
+        self.statusbar = QStatusBar(self)
         self.setWindowTitle("Static array grad")
         my_icon = QIcon("./img/logo.png")
         self.setWindowIcon(my_icon)
@@ -483,6 +570,8 @@ class StaticArrayGradDialog(QDialog):
         self.run_static_array_grad_button.clicked.connect(self.run_static_array_grad)
         self.input_layout.addWidget(self.run_static_array_grad_button)
 
+        self.input_layout.addWidget(self.statusbar)
+
         self.graph_img = QLabel()
         self.layout.addLayout(self.input_layout)
         self.layout.addWidget(self.graph_img)
@@ -502,10 +591,12 @@ class StaticArrayGradDialog(QDialog):
     def run_static_array_grad(self):
         if self.lat_selector.line_edit.text() == "" or self.TR_DEPTH_selector.line_edit.text() == "" or self.folder_selector.line_edit.text() == "":
             print("lacking static array parameters")
+            self.statusbar.showMessage("lacking static array parameters")
             return
 
         if not exists(self.folder_selector.line_edit.text()):
-            print("wrong path entered")
+            print("Wrong path entered")
+            self.statusbar.showMessage("Wrong path entered")
             return
 
         path_ANT, path_PXP, path_SSP, path_OBS = self.l_path
@@ -534,137 +625,13 @@ class StaticArrayGradDialog(QDialog):
         self.buttonBox.setDisabled(False)
 
 
-# class StaticArrayMCMCGradDialog(QDialog):
-#
-#     def __init__(self, l_path, jl):
-#         super().__init__()
-#
-#         self.setWindowTitle("Static array MCMC grad")
-#         my_icon = QIcon("./img/logo.png")
-#         self.setWindowIcon(my_icon)
-#
-#         self.l_path = l_path
-#         self.jl = jl
-#
-#         self.layout = QHBoxLayout()
-#
-#         self.input_layout = QVBoxLayout()
-#
-#         self.lat_selector = DoubleSelector(-89.99, 89.99, "Latitude", True)
-#         self.input_layout.addLayout(self.lat_selector)
-#
-#         self.TR_DEPTH_selector = DoubleSelector(0.0, 99999.0, "Surface transducer depth", True)
-#         self.input_layout.addLayout(self.TR_DEPTH_selector)
-#
-#         self.NPB_selector = IntSelector(3, 99999, "Number of temporal B-spline bases", False, backText="(def : 100)")
-#         self.input_layout.addLayout(self.NPB_selector)
-#
-#         self.NSB_selector = IntSelector(3, 99999, "Number of the perturbated bases for each iteration", False, backText="(def : 100)")
-#         self.input_layout.addLayout(self.NSB_selector)
-#
-#         self.nloop_selector = IntSelector(3, 999999999, "Total number of the MCMC iterations", False, backText="(def : 1200000)")
-#         self.input_layout.addLayout(self.nloop_selector)
-#
-#         self.nburn_selector = IntSelector(3, 999999999, "Burn-in period of the MCMC iterations", False, backText="(def : 200000)")
-#         self.input_layout.addLayout(self.nburn_selector)
-#
-#         self.ndelay_selector = IntSelector(1, 999999999, "Number of the MCMC iterations for starting to perturb the scaling parameters", False, backText="(def : 1)")
-#         self.input_layout.addLayout(self.ndelay_selector)
-#
-#         self.NA_selector = IntSelector(1, 999999999, "Number of the sampling interval", False, backText="(def : 5)")
-#         self.input_layout.addLayout(self.NA_selector)
-#
-#         self.lscale_selector = DoubleSelector(0.0, 99999.0, "Scaling factor for the step width of the long-term NTD parameters", False, backText="(def : 1.0)")
-#         self.input_layout.addLayout(self.lscale_selector)
-#
-#         self.tscale_selector = DoubleSelector(0.0, 99999.0, "Temporal scaling for time in the polynomial functions", False, backText="(def : 10.0)")
-#         self.input_layout.addLayout(self.tscale_selector)
-#
-#         self.folder_selector = FolderExplorerLayout("Static array MCMC grad folder")
-#         self.input_layout.addLayout(self.folder_selector)
-#
-#         self.run_static_array_mcmcgrad_button = QPushButton("Run static array MCMC grad")
-#         self.run_static_array_mcmcgrad_button.clicked.connect(self.run_static_array_mcmcgrad)
-#         self.input_layout.addWidget(self.run_static_array_mcmcgrad_button)
-#
-#         self.graph_img = QLabel()
-#         self.layout.addLayout(self.input_layout)
-#         self.layout.addWidget(self.graph_img)
-#
-#         QBtn = (
-#                 QDialogButtonBox.Ok
-#         )
-#
-#         self.buttonBox = QDialogButtonBox(QBtn)
-#         self.buttonBox.setDisabled(True)
-#         self.buttonBox.accepted.connect(self.accept)
-#
-#         self.input_layout.addWidget(self.buttonBox)
-#
-#         self.setLayout(self.layout)
-#
-#     def run_static_array_mcmcgrad(self):
-#         if self.lat_selector.line_edit.text() == "" or self.TR_DEPTH_selector.line_edit.text() == "" or self.folder_selector.line_edit.text() == "":
-#             print("lacking static array MCMC grad parameters")
-#             return
-#
-#         if not exists(self.folder_selector.line_edit.text()):
-#             print("wrong path entered")
-#             return
-#
-#         path_ANT, path_PXP, path_SSP, path_OBS = self.l_path
-#         lat = float(self.lat_selector.line_edit.text())
-#         folder_path = self.folder_selector.line_edit.text()
-#         TR_DEPTH = float(self.TR_DEPTH_selector.line_edit.text())
-#         if self.NPB_selector.line_edit.text() != "":
-#             NPB = int(self.NPB_selector.line_edit.text())
-#         else:
-#             NPB = 100
-#         if self.NSB_selector.line_edit.text() != "":
-#             NSB = int(self.NSB_selector.line_edit.text())
-#         else:
-#             NSB = 100
-#         if self.nloop_selector.line_edit.text() != "":
-#             nloop = int(self.nloop_selector.line_edit.text())
-#         else:
-#             nloop = 1200000
-#         if self.nburn_selector.line_edit.text() != "":
-#             nburn = int(self.nburn_selector.line_edit.text())
-#         else:
-#             nburn = 200000
-#         if self.ndelay_selector.line_edit.text() != "":
-#             ndelay = int(self.ndelay_selector.line_edit.text())
-#         else:
-#             ndelay = 1
-#         if self.NA_selector.line_edit.text() != "":
-#             NA = int(self.NA_selector.line_edit.text())
-#         else:
-#             NA = 5
-#         if self.lscale_selector.line_edit.text() != "":
-#             lscale = float(self.lscale_selector.line_edit.text())
-#         else:
-#             lscale = 1.0
-#         if self.tscale_selector.line_edit.text() != "":
-#             tscale = float(self.tscale_selector.line_edit.text())
-#         else:
-#             tscale = 10.0
-#         log_path = os.path.join(folder_path, "static_array_mcmcgrad_log.out")
-#         sample_path = os.path.join(folder_path, "static_array_mcmcgrad_sample.out")
-#         mcmc_path = os.path.join(folder_path, "static_array_mcmcgrad_mcmc.out")
-#         position_path = os.path.join(folder_path, "static_array_mcmcgrad_position.out")
-#         statistics_path = os.path.join(folder_path, "static_array_mcmcgrad_statistics.out")
-#         acceptance_path = os.path.join(folder_path, "static_array_mcmcgrad_acceptance.out")
-#         residual_path = os.path.join(folder_path, "static_array_mcmcgrad_residual.out")
-#         bspline_path = os.path.join(folder_path, "static_array_mcmcgrad_bspline.out")
-#         self.jl.SeaGap.static_array_mcmcgrad(lat, juliacall.convert(self.jl.Vector[self.jl.Float64], [TR_DEPTH]), NPB, NSB=NSB, nloop=nloop, nburn=nburn, NA=NA, lscale=lscale, tscale=tscale, ndelay=ndelay, fn1=path_ANT, fn2=path_PXP, fn3=path_SSP, fn4=path_OBS, fn5=path_PXP, fno0=log_path, fno1=sample_path, fno2=mcmc_path, fno3=position_path, fno4=statistics_path, fno5=acceptance_path, fno6=residual_path, fno7=bspline_path)
-#
-#         self.buttonBox.setDisabled(False)
 
 class StaticArrayMCMCGradVDialog(QDialog):
 
     def __init__(self, l_path, jl):
         super().__init__()
 
+        self.statusbar = QStatusBar(self)
         self.setWindowTitle("Static array MCMC grad V")
         my_icon = QIcon("./img/logo.png")
         self.setWindowIcon(my_icon)
@@ -734,6 +701,8 @@ class StaticArrayMCMCGradVDialog(QDialog):
         self.run_static_array_mcmcgradv_button.clicked.connect(self.run_static_array_mcmcgradv)
         self.input_layout.addWidget(self.run_static_array_mcmcgradv_button)
 
+        self.input_layout.addWidget(self.statusbar)
+
         self.layout.addLayout(self.input_layout)
 
         self.graph_img1 = QLabel()
@@ -761,11 +730,13 @@ class StaticArrayMCMCGradVDialog(QDialog):
         self.graph_img2.clear()
         self.graph_img2.repaint()
         if self.lat_selector.line_edit.text() == "" or self.TR_DEPTH_selector.line_edit.text() == "" or self.folder_selector.line_edit.text() == "" or self.dep_selector.line_edit.text() == "":
-            print("lacking static array MCMC grad V parameters")
+            print("Lacking static array MCMC grad V parameters")
+            self.statusbar.showMessage("Lacking static array MCMC grad V parameters")
             return
 
         if not exists(self.folder_selector.line_edit.text()):
-            print("wrong path entered")
+            print("Wrong path entered")
+            self.statusbar.showMessage("Wrong path entered")
             return
 
         path_ANT, path_PXP, path_SSP, path_OBS = self.l_path
@@ -868,7 +839,6 @@ class StaticArrayMCMCGradVDialog(QDialog):
         self.buttonBox.setDisabled(False)
 
     def accept(self):
-        print("ACCEPTED !")
         try :
             os.remove("gui_tmp/tmp_static_array_s_log.txt")
             os.remove("gui_tmp/tmp_static_array_s_solve.out")
@@ -883,7 +853,6 @@ class StaticArrayMCMCGradVDialog(QDialog):
         super().accept()
 
     def reject(self):
-        print("REJECTED !")
         try :
             os.remove("gui_tmp/tmp_static_array_s_log.txt")
         except :
@@ -924,6 +893,7 @@ class StaticIndividualDialog(QDialog):
     def __init__(self, l_path, jl):
         super().__init__()
 
+        self.statusbar = QStatusBar(self)
         self.setWindowTitle("Static array individual")
         my_icon = QIcon("./img/logo.png")
         self.setWindowIcon(my_icon)
@@ -961,6 +931,8 @@ class StaticIndividualDialog(QDialog):
         self.run_static_array_button.clicked.connect(self.run_static_individual)
         self.input_layout.addWidget(self.run_static_array_button)
 
+        self.input_layout.addWidget(self.statusbar)
+
         self.graph_img = QLabel()
         self.layout.addLayout(self.input_layout)
         self.layout.addWidget(self.graph_img)
@@ -979,11 +951,13 @@ class StaticIndividualDialog(QDialog):
 
     def run_static_individual(self):
         if self.lat_selector.line_edit.text() == "" or self.TR_DEPTH_selector.line_edit.text() == "" or self.folder_selector.line_edit.text() == "":
-            print("lacking static array individual parameters")
+            print("Lacking static individual parameters")
+            self.statusbar.showMessage("Lacking static individual parameters")
             return
 
         if not exists(self.folder_selector.line_edit.text()):
             print("wrong path entered")
+            self.statusbar.showMessage("Wrong path entered")
             return
 
         path_ANT, path_PXP, path_SSP, path_OBS = self.l_path

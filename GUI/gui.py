@@ -4,7 +4,7 @@ import sys
 from os.path import exists, join
 
 from GUI.customDialogs import DenoiseDialog, StaticArrayDialog, StaticArrayGradDialog, StaticArrayMCMCGradVDialog, \
-    StaticIndividualDialog, NewProjectDialog, TtresDialog, MCMCGradVPlotDialog
+    StaticIndividualDialog, NewProjectDialog, TtresDialog, MCMCGradVPlotDialog, FromGARPOSDialog
 from customLayout import FileExplorerLayout
 
 import yaml, os
@@ -54,7 +54,10 @@ class MainWindow(QMainWindow):
         toolbar.addAction(self.save_project_action)
 
         self.addToolBar(toolbar)
-        self.setStatusBar(QStatusBar(self))
+        self.status_bar = QStatusBar(self)
+        self.setStatusBar(self.status_bar)
+
+        # self.status_bar.showMessage("COUCOU !!!", 2000)
 
         self.maintab = QTabWidget()
 
@@ -88,6 +91,10 @@ class MainWindow(QMainWindow):
         self.denoise_Button = QPushButton("Denoise")
         self.denoise_Button.clicked.connect(self.run_denoise_dlg)
         self.preproc_tab_layout.addWidget(self.denoise_Button)
+
+        self.from_GARPOS_Button = QPushButton("From GARPOS ...")
+        self.from_GARPOS_Button.clicked.connect(self.run_from_GARPOS_dlg)
+        self.preproc_tab_layout.addWidget(self.from_GARPOS_Button)
 
         self.preproc_tab.setLayout(self.preproc_tab_layout)
 
@@ -228,6 +235,16 @@ class MainWindow(QMainWindow):
         denoise_dlg = DenoiseDialog(l_path, jl)
         denoise_dlg.exec()
         print("END END END")
+
+
+
+    def run_from_GARPOS_dlg(self):
+
+        from_GARPOS_dlg = FromGARPOSDialog()
+        from_GARPOS_dlg.exec()
+        print("END END END")
+
+
 
 
     def run_static_array_dlg(self):

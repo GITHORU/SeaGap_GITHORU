@@ -57,11 +57,9 @@ def GARPOS2SeaGap(path_obs, path_svp, path_ini, path_pxp_o, path_obs_o, path_ssp
         for index, row in obs_df.iterrows():
             mount_index = l_mount.index(row["MT"])+1
             if mount_index in l_current_tr :
-                print(1)
                 session += 1
                 l_current_tr = [mount_index]
             else :
-                print(2)
                 l_current_tr.append(mount_index)
             chaine = chaine + str(mount_index) #str(row["MT"])
             chaine = chaine + " " + str(row["TT"])
