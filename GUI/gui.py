@@ -4,7 +4,7 @@ import sys
 from os.path import exists, join
 
 from GUI.customDialogs import DenoiseDialog, StaticArrayDialog, StaticArrayGradDialog, StaticArrayMCMCGradVDialog, \
-    StaticIndividualDialog, NewProjectDialog, TtresDialog, MCMCGradVPlotDialog, FromGARPOSDialog
+    StaticIndividualDialog, NewProjectDialog, TtresDialog, MCMCGradVPlotDialog, FromGARPOSDialog, TrackPlotDialog
 from customLayout import FileExplorerLayout
 
 import yaml, os
@@ -137,6 +137,11 @@ class MainWindow(QMainWindow):
         self.plotting_tab_layout.addWidget(self.ttres_Button)
 
 
+        self.track_Button = QPushButton("Track")
+        self.track_Button.clicked.connect(self.show_track_window)
+        self.plotting_tab_layout.addWidget(self.track_Button)
+
+
         self.mcmcgradvplot_Button = QPushButton("MCMC Grad V plot")
         self.mcmcgradvplot_Button.clicked.connect(self.run_mcmcgradvplot_dlg)
         self.plotting_tab_layout.addWidget(self.mcmcgradvplot_Button)
@@ -235,6 +240,7 @@ class MainWindow(QMainWindow):
 
         l_path = self.get_path_list()
         if not is_path_list_valid(l_path):
+            self.status_bar.showMessage("Paths not valid")
             print("Paths not valid")
             return
         denoise_dlg = DenoiseDialog(l_path, jl)
@@ -256,6 +262,7 @@ class MainWindow(QMainWindow):
 
         l_path = self.get_path_list()
         if not is_path_list_valid(l_path):
+            self.status_bar.showMessage("Paths not valid")
             print("Paths not valid")
             return
         static_array_dlg = StaticArrayDialog(l_path, jl)
@@ -266,6 +273,7 @@ class MainWindow(QMainWindow):
     def run_ttres_dlg(self):
         l_path = self.get_path_list()
         if not is_path_list_valid(l_path):
+            self.status_bar.showMessage("Paths not valid")
             print("Paths not valid")
             return
         ttres_dlg = TtresDialog(l_path, jl)
@@ -282,11 +290,25 @@ class MainWindow(QMainWindow):
         ttres_dlg.exec()
         print("END END END")
 
+    def show_track_window(self):
+        l_path = self.get_path_list()
+        if not is_path_list_valid(l_path):
+            self.status_bar.showMessage("Paths not valid")
+            print("Paths not valid")
+            return
+        path_ANT, path_PXP, path_SSP, path_OBS = l_path
+        jl.SeaGap.plot_track(fn1=path_PXP, fn2=path_OBS, fno="gui_tmp/track.png")
+
+        track_plot_dlg = TrackPlotDialog()
+        track_plot_dlg.exec()
+        print("END END END")
+
 
     def run_static_array_grad_dlg(self):
 
         l_path = self.get_path_list()
         if not is_path_list_valid(l_path):
+            self.status_bar.showMessage("Paths not valid")
             print("Paths not valid")
             return
         static_array_grad_dlg = StaticArrayGradDialog(l_path, jl)
@@ -298,6 +320,7 @@ class MainWindow(QMainWindow):
 
         l_path = self.get_path_list()
         if not is_path_list_valid(l_path):
+            self.status_bar.showMessage("Paths not valid")
             print("Paths not valid")
             return
         static_array_mcmcgradv_dlg = StaticArrayMCMCGradVDialog(l_path, jl)
@@ -309,6 +332,7 @@ class MainWindow(QMainWindow):
 
         l_path = self.get_path_list()
         if not is_path_list_valid(l_path):
+            self.status_bar.showMessage("Paths not valid")
             print("Paths not valid")
             return
         static_array_individual_dlg = StaticIndividualDialog(l_path, jl)

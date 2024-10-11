@@ -71,6 +71,22 @@ class NewProjectDialog(QDialog):
 
         super().accept()
 
+class TrackPlotDialog(QDialog):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Track plot")
+        my_icon = QIcon("./img/logo.png")
+        self.setWindowIcon(my_icon)
+
+        self.layout = QVBoxLayout()
+
+        label = QLabel(self)
+        pixmap = QPixmap("gui_tmp/track.png")
+        label.setPixmap(pixmap)
+        self.layout.addWidget(label)
+
+        self.setLayout(self.layout)
+
 
 
 
