@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QDialogButtonBox, QLineEdit, \
-    QStatusBar
+    QStatusBar, QRadioButton
 from customLayout import DoubleSelector, IntSelector, FolderExplorerLayout, FileExplorerLayout
 from PySide6.QtGui import QIcon, QPixmap
 import shutil, os
@@ -195,6 +195,9 @@ class FromGARPOSDialog(QDialog):
         self.prefix = QLineEdit("fromGARPOS_")
         self.input_layout.addWidget(self.prefix)
 
+        self.split_radio = QRadioButton("Split sets into multiple files")
+        self.input_layout.addWidget(self.split_radio)
+
         self.run_convert_button = QPushButton("Convert")
         self.run_convert_button.clicked.connect(self.run_convert)
         self.input_layout.addWidget(self.run_convert_button)
@@ -233,7 +236,7 @@ class FromGARPOSDialog(QDialog):
         path_SG_SSP = join(SG_folder, prefix+"ss_prof.inp")
         path_SG_ANT = join(SG_folder, prefix+"tr-ant.inp")
 
-        GARPOS2SeaGap(path_OBS, path_SVP, path_INI, path_SG_PXP, path_SG_OBS, path_SG_SSP, path_SG_ANT)
+        GARPOS2SeaGap(path_OBS, path_SVP, path_INI, path_SG_PXP, path_SG_OBS, path_SG_SSP, path_SG_ANT, split_sets=self.split_radio.isChecked())
         self.buttonBox.setDisabled(False)
 
 

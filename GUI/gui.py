@@ -11,7 +11,12 @@ import yaml, os
 
 from juliacall import Main as jl
 
-jl.seval("using SeaGap")
+# jl.seval('using ../src/SeaGap.jl')
+# jl.seval('cd ../')
+# jl.seval('include("../src/SeaGap.jl")')
+jl.seval('import Pkg')
+jl.seval('Pkg.add(url="https://github.com/f-tommy/SeaGap")')
+jl.seval('using SeaGap')
 
 def is_path_list_valid(path_list):
     for path in path_list :
