@@ -524,6 +524,77 @@ class MCMCGradVPlotDialog(QDialog):
             pixmap2.scaled(pixmap2.width() // 1, pixmap2.height() // 1, Qt.AspectRatioMode.KeepAspectRatio))
         self.graph_img2.repaint()
 
+
+class Histogram2DGradVPlotDialog(QDialog):
+
+    def __init__(self, l_path, jl):
+        super().__init__()
+
+        self.statusbar = QStatusBar(self)
+        self.setWindowTitle("Histogram 2D Grad V plot")
+        my_icon = QIcon("./img/logo.png")
+        self.setWindowIcon(my_icon)
+
+        self.l_path = l_path
+        self.jl = jl
+
+        self.layout = QHBoxLayout()
+
+        self.input_layout = QVBoxLayout()
+        self.input_layout.setAlignment(Qt.AlignTop)
+
+        self.fig_layout = QHBoxLayout()
+
+        self.folder_selector = FolderExplorerLayout("MCMC Grad V results folder", req=True)
+        self.input_layout.addLayout(self.folder_selector)
+
+        self.nshuffle_selector = IntSelector(1, 999999999, "number of plots for each parameter", req=True, backText="0 < nshuffle < nb of samples")
+        self.input_layout.addLayout(self.nshuffle_selector)
+
+
+        self.layout.addLayout(self.input_layout)
+
+        self.graph_img1 = QLabel()
+        self.fig_layout.addWidget(self.graph_img1)
+
+        self.layout.addLayout(self.fig_layout)
+
+        self.run_histogram2dgradv_plot_button = QPushButton("Run Histogram 2D Grad V plot")
+        self.run_histogram2dgradv_plot_button.clicked.connect(self.run_histogram2dgradv_plot)
+        self.input_layout.addWidget(self.run_histogram2dgradv_plot_button)
+
+        self.input_layout.addWidget(self.statusbar)
+
+        QBtn = (
+                QDialogButtonBox.Ok
+        )
+
+        self.buttonBox = QDialogButtonBox(QBtn)
+        self.buttonBox.setDisabled(True)
+        self.buttonBox.accepted.connect(self.accept)
+
+        self.setLayout(self.layout)
+
+    def run_histogram2dgradv_plot(self):
+        self.graph_img1.clear()
+        self.graph_img1.repaint()
+        if self.folder_selector.line_edit.text() == "" and self.nshuffle_selector.line_edit.text() == "":
+            print("Lacking parameters")
+            self.statusbar.showMessage("Lacking parameters")
+            return
+        nshuffle = int(self.nshuffle_selector.line_edit.text())
+
+        path_ANT, path_PXP, path_SSP, path_OBS = self.l_path
+        mcmcgradv_folder = self.folder_selector.line_edit.text()
+
+        self.jl.SeaGap.plot_histogram2d_gradv(nshuffle=nshuffle, fn=join(mcmcgradv_folder, "static_array_mcmcgradv_sample.out"), show=False, fno=join(mcmcgradv_folder, "static_array_mcmcgradv_hist2dfig.png"))
+
+        pixmap1 = QPixmap(join(mcmcgradv_folder, "static_array_mcmcgradv_hist2dfig.png"))
+        self.graph_img1.setPixmap(
+            pixmap1.scaled(pixmap1.width() // 1, pixmap1.height() // 1, Qt.AspectRatioMode.KeepAspectRatio))
+        self.graph_img1.repaint()
+
+
 class NTDMCMCGradVPlotDialog(QDialog):
 
     def __init__(self, l_path, jl):

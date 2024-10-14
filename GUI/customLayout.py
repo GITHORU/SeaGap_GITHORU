@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QLineEdit, QFileDialog
 from PySide6.QtGui import QDoubleValidator, QIntValidator
 from PySide6.QtCore import QLocale
+import os
 
 
 
@@ -69,10 +70,10 @@ class DoubleSelector(QVBoxLayout):
             return
 
 class FileExplorerLayout(QVBoxLayout):
-    def __init__(self, label, req=True, default_text="", default_path="", *args, **kwargs):
+    def __init__(self, label, req=True, default_text="", *args, **kwargs): #default_path="",
         super(FileExplorerLayout, self).__init__(*args, **kwargs)
         self.label = label
-        self.default_path = default_path
+        # self.default_path = default_path
 
         self.addWidget(QLabel(self.label+" :"))
 
@@ -92,15 +93,15 @@ class FileExplorerLayout(QVBoxLayout):
     def open_file_dialog(self):
         dlg = QFileDialog()
         dlg.setWindowTitle("Select " + self.label + " File")
-        if self.default_path != "" :
-            dlg.setDirectory(self.default_path)
+        # if self.default_path != "" :
+        dlg.setDirectory(os.curdir) #self.default_path)
         self.line_edit.setText(dlg.getOpenFileName()[0])
 
 class FolderExplorerLayout(QVBoxLayout):
-    def __init__(self, label, req=True, default_text="", default_path="", *args, **kwargs):
+    def __init__(self, label, req=True, default_text="", *args, **kwargs): #, default_path=""
         super(FolderExplorerLayout, self).__init__(*args, **kwargs)
         self.label = label
-        self.default_path = default_path
+        # self.default_path = default_path
 
         self.addWidget(QLabel(self.label+" :"))
 
@@ -120,6 +121,6 @@ class FolderExplorerLayout(QVBoxLayout):
     def open_folder_dialog(self):
         dlg = QFileDialog()
         dlg.setWindowTitle("Select " + self.label + " Folder")
-        if self.default_path != "" :
-            dlg.setDirectory(self.default_path)
+        # if self.default_path != "" :
+        dlg.setDirectory(os.curdir) #self.default_path)
         self.line_edit.setText(dlg.getExistingDirectory())

@@ -4,7 +4,7 @@ import sys
 from os.path import exists, join
 
 from GUI.customDialogs import DenoiseDialog, StaticArrayDialog, StaticArrayGradDialog, StaticArrayMCMCGradVDialog, \
-    StaticIndividualDialog, NewProjectDialog, TtresDialog, MCMCGradVPlotDialog, NTDMCMCGradVPlotDialog, FromGARPOSDialog, TrackPlotDialog, TimeTrackPlotDialog, GradmapDialog
+    StaticIndividualDialog, NewProjectDialog, TtresDialog, MCMCGradVPlotDialog, NTDMCMCGradVPlotDialog, FromGARPOSDialog, TrackPlotDialog, TimeTrackPlotDialog, GradmapDialog, Histogram2DGradVPlotDialog
 from customLayout import FileExplorerLayout
 
 import yaml, os
@@ -14,9 +14,10 @@ from juliacall import Main as jl
 # jl.seval('using ../src/SeaGap.jl')
 # jl.seval('cd ../')
 # jl.seval('include("../src/SeaGap.jl")')
-jl.seval('import Pkg')
-jl.seval('Pkg.add(url="https://github.com/f-tommy/SeaGap")')
+# jl.seval('import Pkg')
+# jl.seval('Pkg.add(url="https://github.com/f-tommy/SeaGap")')
 jl.seval('using SeaGap')
+jl.seval
 
 def is_path_list_valid(path_list):
     for path in path_list :
@@ -131,21 +132,17 @@ class MainWindow(QMainWindow):
         self.plotting_tab = QWidget()
         self.plotting_tab_layout = QVBoxLayout()
 
-
         self.ttres_Button = QPushButton("TT residuals")
         self.ttres_Button.clicked.connect(self.run_ttres_dlg)
         self.plotting_tab_layout.addWidget(self.ttres_Button)
-
 
         self.track_Button = QPushButton("Track")
         self.track_Button.clicked.connect(self.show_track_window)
         self.plotting_tab_layout.addWidget(self.track_Button)
 
-
         self.timetrack_Button = QPushButton("Time track")
         self.timetrack_Button.clicked.connect(self.show_timetrack_window)
         self.plotting_tab_layout.addWidget(self.timetrack_Button)
-
 
         self.mcmcgradvplot_Button = QPushButton("MCMC Grad V plot")
         self.mcmcgradvplot_Button.clicked.connect(self.run_mcmcgradvplot_dlg)
@@ -155,10 +152,13 @@ class MainWindow(QMainWindow):
         self.ntdmcmcgradvplot_Button.clicked.connect(self.run_ntdmcmcgradvplot_dlg)
         self.plotting_tab_layout.addWidget(self.ntdmcmcgradvplot_Button)
 
-
         self.gradmap_Button = QPushButton("Gradmap")
         self.gradmap_Button.clicked.connect(self.show_gradmap_window)
         self.plotting_tab_layout.addWidget(self.gradmap_Button)
+
+        self.histogram2D_Button = QPushButton("Histogram 2D Grad V")
+        self.histogram2D_Button.clicked.connect(self.show_histogram2D_window)
+        self.plotting_tab_layout.addWidget(self.histogram2D_Button)
 
 
 
@@ -216,10 +216,10 @@ class MainWindow(QMainWindow):
             if self.base_path != "" :
                 os.chdir(self.base_path)
                 print("OK !")
-                self.ANT_file_explorer.default_path = self.base_path
-                self.PXP_file_explorer.default_path = self.base_path
-                self.SSP_file_explorer.default_path = self.base_path
-                self.OBS_file_explorer.default_path = self.base_path
+                # self.ANT_file_explorer.default_path = self.base_path
+                # self.PXP_file_explorer.default_path = self.base_path
+                # self.SSP_file_explorer.default_path = self.base_path
+                # self.OBS_file_explorer.default_path = self.base_path
 
             self.ANT_path = dict_prj["ANT_path"]
             self.ANT_file_explorer.line_edit.setText(self.ANT_path)
@@ -379,6 +379,19 @@ class MainWindow(QMainWindow):
             return
         static_array_individual_dlg = StaticIndividualDialog(l_path, jl)
         static_array_individual_dlg.exec()
+
+
+    def show_histogram2D_window(self):
+
+        l_path = self.get_path_list()
+        # if not is_path_list_valid(l_path):
+        #     self.status_bar.showMessage("Paths not valid")
+        #     print("Paths not valid")
+        #     return
+        histogram2d_dlg = Histogram2DGradVPlotDialog(l_path, jl)
+        histogram2d_dlg.exec()
+
+
 
 
 
