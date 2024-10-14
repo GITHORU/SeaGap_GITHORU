@@ -36,7 +36,7 @@ class MainWindow(QMainWindow):
         self.PXP_path = ""
         self.SSP_path = ""
         self.OBS_path = ""
-        self.prj_path = ""
+        self.proj_file_path = ""
 
     ### TOOLBAR ###
 
@@ -179,7 +179,10 @@ class MainWindow(QMainWindow):
         dlg.exec()
         if dlg.proj_file_path != "" :
             self.load_proj(None, proj_file_path=dlg.proj_file_path)
-        print("NEW")
+        else :
+            self.proj_file_path = ""
+        print("New project '" + os.path.basename(dlg.proj_file_path) + "' created")
+        self.status_bar.showMessage("New project '" + os.path.basename(dlg.proj_file_path) + "' created")
 
     def load_proj(self, _, proj_file_path=""):
         if proj_file_path == "" :
@@ -188,7 +191,9 @@ class MainWindow(QMainWindow):
             proj_file_path = dlg.getOpenFileName(filter="project(*.prj)")[0]
         
         if not exists(proj_file_path) :
-            print("wrong project file")
+            self.proj_file_path = ""
+            print("Wrong project file")
+            self.status_bar.showMessage("Wrong project file")
             return
         with open(proj_file_path) as f:
             dict_prj = yaml.full_load(f)
@@ -216,11 +221,14 @@ class MainWindow(QMainWindow):
 
             self.proj_file_path = proj_file_path
 
-        print("LOAD")
+        print("Successfully loaded '"+ os.path.basename(self.proj_file_path) +"' project file")
+        self.status_bar.showMessage("Successfully loaded '"+ os.path.basename(self.proj_file_path) +"' project file")
 
     def save_project(self):
         if self.proj_file_path == "" :
-            print("warning : no project selected")
+            print("No project selected")
+            self.status_bar.showMessage("No project selected")
+            return
         with open(self.proj_file_path, "w") as proj_file_path :
             proj_file_path.write('---\n')
             proj_file_path.write('base_path : "'+os.path.dirname(self.proj_file_path)+'"\n')
@@ -229,7 +237,8 @@ class MainWindow(QMainWindow):
             proj_file_path.write('PXP_path : "'+self.PXP_file_explorer.line_edit.text()+'"\n')
             proj_file_path.write('SSP_path : "'+self.SSP_file_explorer.line_edit.text()+'"\n')
             proj_file_path.write('OBS_path : "'+self.OBS_file_explorer.line_edit.text()+'"\n')
-        print("SAVE")
+        print("Successfully saved '"+ os.path.basename(self.proj_file_path))
+        self.status_bar.showMessage("Successfully saved '"+ os.path.basename(self.proj_file_path))
 
     def get_path_list(self):
         return [self.ANT_file_explorer.line_edit.text(), self.PXP_file_explorer.line_edit.text(), self.SSP_file_explorer.line_edit.text(), self.OBS_file_explorer.line_edit.text()]
@@ -245,7 +254,6 @@ class MainWindow(QMainWindow):
             return
         denoise_dlg = DenoiseDialog(l_path, jl)
         denoise_dlg.exec()
-        print("END END END")
 
 
 
@@ -253,7 +261,6 @@ class MainWindow(QMainWindow):
 
         from_GARPOS_dlg = FromGARPOSDialog()
         from_GARPOS_dlg.exec()
-        print("END END END")
 
 
 
@@ -267,7 +274,6 @@ class MainWindow(QMainWindow):
             return
         static_array_dlg = StaticArrayDialog(l_path, jl)
         static_array_dlg.exec()
-        print("END END END")
 
 
     def run_ttres_dlg(self):
@@ -278,17 +284,12 @@ class MainWindow(QMainWindow):
             return
         ttres_dlg = TtresDialog(l_path, jl)
         ttres_dlg.exec()
-        print("END END END")
 
 
     def run_mcmcgradvplot_dlg(self):
         l_path = self.get_path_list()
-        # if not is_path_list_valid(l_path):
-        #     print("Paths not valid")
-        #     return
         ttres_dlg = MCMCGradVPlotDialog(l_path, jl)
         ttres_dlg.exec()
-        print("END END END")
 
     def show_track_window(self):
         l_path = self.get_path_list()
@@ -301,7 +302,6 @@ class MainWindow(QMainWindow):
 
         track_plot_dlg = TrackPlotDialog()
         track_plot_dlg.exec()
-        print("END END END")
 
 
     def run_static_array_grad_dlg(self):
@@ -313,7 +313,6 @@ class MainWindow(QMainWindow):
             return
         static_array_grad_dlg = StaticArrayGradDialog(l_path, jl)
         static_array_grad_dlg.exec()
-        print("END END END")
 
 
     def run_static_array_mcmcgradv_dlg(self):
@@ -325,7 +324,6 @@ class MainWindow(QMainWindow):
             return
         static_array_mcmcgradv_dlg = StaticArrayMCMCGradVDialog(l_path, jl)
         static_array_mcmcgradv_dlg.exec()
-        print("END END END")
 
 
     def run_static_individual_dlg(self):
@@ -337,7 +335,6 @@ class MainWindow(QMainWindow):
             return
         static_array_individual_dlg = StaticIndividualDialog(l_path, jl)
         static_array_individual_dlg.exec()
-        print("END END END")
 
 
 
