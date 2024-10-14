@@ -4,7 +4,7 @@ import sys
 from os.path import exists, join
 
 from GUI.customDialogs import DenoiseDialog, StaticArrayDialog, StaticArrayGradDialog, StaticArrayMCMCGradVDialog, \
-    StaticIndividualDialog, NewProjectDialog, TtresDialog, MCMCGradVPlotDialog, FromGARPOSDialog, TrackPlotDialog, TimeTrackPlotDialog
+    StaticIndividualDialog, NewProjectDialog, TtresDialog, MCMCGradVPlotDialog, NTDMCMCGradVPlotDialog, FromGARPOSDialog, TrackPlotDialog, TimeTrackPlotDialog, GradmapDialog
 from customLayout import FileExplorerLayout
 
 import yaml, os
@@ -151,6 +151,15 @@ class MainWindow(QMainWindow):
         self.mcmcgradvplot_Button.clicked.connect(self.run_mcmcgradvplot_dlg)
         self.plotting_tab_layout.addWidget(self.mcmcgradvplot_Button)
 
+        self.ntdmcmcgradvplot_Button = QPushButton("NTD MCMC Grad V plot")
+        self.ntdmcmcgradvplot_Button.clicked.connect(self.run_ntdmcmcgradvplot_dlg)
+        self.plotting_tab_layout.addWidget(self.ntdmcmcgradvplot_Button)
+
+
+        self.gradmap_Button = QPushButton("Gradmap")
+        self.gradmap_Button.clicked.connect(self.show_gradmap_window)
+        self.plotting_tab_layout.addWidget(self.gradmap_Button)
+
 
 
         self.plotting_tab.setLayout(self.plotting_tab_layout)
@@ -206,6 +215,7 @@ class MainWindow(QMainWindow):
             self.base_path = dict_prj["base_path"]
             if self.base_path != "" :
                 os.chdir(self.base_path)
+                print("OK !")
                 self.ANT_file_explorer.default_path = self.base_path
                 self.PXP_file_explorer.default_path = self.base_path
                 self.SSP_file_explorer.default_path = self.base_path
@@ -293,8 +303,14 @@ class MainWindow(QMainWindow):
 
     def run_mcmcgradvplot_dlg(self):
         l_path = self.get_path_list()
-        ttres_dlg = MCMCGradVPlotDialog(l_path, jl)
-        ttres_dlg.exec()
+        mcmcgradvplot_dlg = MCMCGradVPlotDialog(l_path, jl)
+        mcmcgradvplot_dlg.exec()
+
+
+    def run_ntdmcmcgradvplot_dlg(self):
+        l_path = self.get_path_list()
+        ntdmcmcgradvplot_dlg = NTDMCMCGradVPlotDialog(l_path, jl)
+        ntdmcmcgradvplot_dlg.exec()
 
     def show_track_window(self):
         l_path = self.get_path_list()
@@ -307,6 +323,17 @@ class MainWindow(QMainWindow):
 
         track_plot_dlg = TrackPlotDialog()
         track_plot_dlg.exec()
+
+
+
+    def show_gradmap_window(self):
+        l_path = self.get_path_list()
+        if not is_path_list_valid(l_path):
+            self.status_bar.showMessage("Paths not valid")
+            print("Paths not valid")
+            return
+        gradmap_dlg = GradmapDialog(l_path, jl)
+        gradmap_dlg.exec()
 
     def show_timetrack_window(self):
         l_path = self.get_path_list()

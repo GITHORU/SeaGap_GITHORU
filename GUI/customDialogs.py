@@ -87,6 +87,70 @@ class TrackPlotDialog(QDialog):
 
         self.setLayout(self.layout)
 
+class GradmapDialog(QDialog):
+    def __init__(self, l_path, jl):
+        super().__init__()
+
+        self.statusbar = QStatusBar(self)
+        self.setWindowTitle("Grad map plot")
+        my_icon = QIcon("./img/logo.png")
+        self.setWindowIcon(my_icon)
+
+        self.l_path = l_path
+        self.jl = jl
+
+        self.layout = QHBoxLayout()
+
+        self.input_layout = QVBoxLayout()
+        self.input_layout.setAlignment(Qt.AlignTop)
+
+        self.fig_layout = QHBoxLayout()
+
+        self.folder_selector = FolderExplorerLayout("MCMC Grad V results folder", req=True)
+        self.input_layout.addLayout(self.folder_selector)
+
+
+        self.layout.addLayout(self.input_layout)
+
+        self.graph_img1 = QLabel()
+        self.fig_layout.addWidget(self.graph_img1)
+
+        self.layout.addLayout(self.fig_layout)
+
+        self.run_gradmap_plot_button = QPushButton("Run NTD MCMC Grad V plot")
+        self.run_gradmap_plot_button.clicked.connect(self.run_gradmap_plot)
+        self.input_layout.addWidget(self.run_gradmap_plot_button)
+
+        self.input_layout.addWidget(self.statusbar)
+
+        QBtn = (
+                QDialogButtonBox.Ok
+        )
+
+        self.buttonBox = QDialogButtonBox(QBtn)
+        self.buttonBox.setDisabled(True)
+        self.buttonBox.accepted.connect(self.accept)
+
+        self.setLayout(self.layout)
+
+    def run_gradmap_plot(self):
+        self.graph_img1.clear()
+        self.graph_img1.repaint()
+        if self.folder_selector.line_edit.text() == "" :
+            print("Lacking folder")
+            self.statusbar.showMessage("Lacking folder")
+            return
+
+        path_ANT, path_PXP, path_SSP, path_OBS = self.l_path
+        mcmcgradv_folder = self.folder_selector.line_edit.text()
+
+        self.jl.SeaGap.plot_gradmap_gradv(fn1=path_PXP, fn2=join(mcmcgradv_folder, "static_array_mcmcgradv_residual.out"), show=False, fno=join(mcmcgradv_folder, "static_array_mcmcgradv_gradmap.png"))
+
+        pixmap1 = QPixmap(join(mcmcgradv_folder, "static_array_mcmcgradv_gradmap.png"))
+        self.graph_img1.setPixmap(
+            pixmap1.scaled(pixmap1.width() // 1, pixmap1.height() // 1, Qt.AspectRatioMode.KeepAspectRatio))
+        self.graph_img1.repaint()
+
 class TimeTrackPlotDialog(QDialog):
     def __init__(self):
         super().__init__()
@@ -460,7 +524,70 @@ class MCMCGradVPlotDialog(QDialog):
             pixmap2.scaled(pixmap2.width() // 1, pixmap2.height() // 1, Qt.AspectRatioMode.KeepAspectRatio))
         self.graph_img2.repaint()
 
+class NTDMCMCGradVPlotDialog(QDialog):
 
+    def __init__(self, l_path, jl):
+        super().__init__()
+
+        self.statusbar = QStatusBar(self)
+        self.setWindowTitle("NTD MCMC Grad V plot")
+        my_icon = QIcon("./img/logo.png")
+        self.setWindowIcon(my_icon)
+
+        self.l_path = l_path
+        self.jl = jl
+
+        self.layout = QHBoxLayout()
+
+        self.input_layout = QVBoxLayout()
+        self.input_layout.setAlignment(Qt.AlignTop)
+
+        self.fig_layout = QHBoxLayout()
+
+        self.folder_selector = FolderExplorerLayout("MCMC Grad V results folder", req=True)
+        self.input_layout.addLayout(self.folder_selector)
+
+
+        self.layout.addLayout(self.input_layout)
+
+        self.graph_img1 = QLabel()
+        self.fig_layout.addWidget(self.graph_img1)
+
+        self.layout.addLayout(self.fig_layout)
+
+        self.run_ntdmcmcgradv_plot_button = QPushButton("Run NTD MCMC Grad V plot")
+        self.run_ntdmcmcgradv_plot_button.clicked.connect(self.run_ntdmcmcgradv_plot)
+        self.input_layout.addWidget(self.run_ntdmcmcgradv_plot_button)
+
+        self.input_layout.addWidget(self.statusbar)
+
+        QBtn = (
+                QDialogButtonBox.Ok
+        )
+
+        self.buttonBox = QDialogButtonBox(QBtn)
+        self.buttonBox.setDisabled(True)
+        self.buttonBox.accepted.connect(self.accept)
+
+        self.setLayout(self.layout)
+
+    def run_ntdmcmcgradv_plot(self):
+        self.graph_img1.clear()
+        self.graph_img1.repaint()
+        if self.folder_selector.line_edit.text() == "" :
+            print("Lacking folder")
+            self.statusbar.showMessage("Lacking folder")
+            return
+
+        path_ANT, path_PXP, path_SSP, path_OBS = self.l_path
+        mcmcgradv_folder = self.folder_selector.line_edit.text()
+
+        self.jl.SeaGap.plot_ntd_gradv(fn=join(mcmcgradv_folder, "static_array_mcmcgradv_residual.out"), show=False, fno=join(mcmcgradv_folder, "static_array_mcmcgradv_ntdfig.png"))
+
+        pixmap1 = QPixmap(join(mcmcgradv_folder, "static_array_mcmcgradv_ntdfig.png"))
+        self.graph_img1.setPixmap(
+            pixmap1.scaled(pixmap1.width() // 1, pixmap1.height() // 1, Qt.AspectRatioMode.KeepAspectRatio))
+        self.graph_img1.repaint()
 
 class StaticArrayDialog(QDialog):
 
