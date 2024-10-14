@@ -4,7 +4,7 @@ import sys
 from os.path import exists, join
 
 from GUI.customDialogs import DenoiseDialog, StaticArrayDialog, StaticArrayGradDialog, StaticArrayMCMCGradVDialog, \
-    StaticIndividualDialog, NewProjectDialog, TtresDialog, MCMCGradVPlotDialog, FromGARPOSDialog, TrackPlotDialog
+    StaticIndividualDialog, NewProjectDialog, TtresDialog, MCMCGradVPlotDialog, FromGARPOSDialog, TrackPlotDialog, TimeTrackPlotDialog
 from customLayout import FileExplorerLayout
 
 import yaml, os
@@ -140,6 +140,11 @@ class MainWindow(QMainWindow):
         self.track_Button = QPushButton("Track")
         self.track_Button.clicked.connect(self.show_track_window)
         self.plotting_tab_layout.addWidget(self.track_Button)
+
+
+        self.timetrack_Button = QPushButton("Time track")
+        self.timetrack_Button.clicked.connect(self.show_timetrack_window)
+        self.plotting_tab_layout.addWidget(self.timetrack_Button)
 
 
         self.mcmcgradvplot_Button = QPushButton("MCMC Grad V plot")
@@ -301,6 +306,18 @@ class MainWindow(QMainWindow):
         jl.SeaGap.plot_track(fn1=path_PXP, fn2=path_OBS, fno="gui_tmp/track.png")
 
         track_plot_dlg = TrackPlotDialog()
+        track_plot_dlg.exec()
+
+    def show_timetrack_window(self):
+        l_path = self.get_path_list()
+        if not is_path_list_valid(l_path):
+            self.status_bar.showMessage("Paths not valid")
+            print("Paths not valid")
+            return
+        path_ANT, path_PXP, path_SSP, path_OBS = l_path
+        jl.SeaGap.plot_timetrack(fn=path_OBS, fno="gui_tmp/time_track.png")
+
+        track_plot_dlg = TimeTrackPlotDialog()
         track_plot_dlg.exec()
 
 

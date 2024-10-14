@@ -87,6 +87,22 @@ class TrackPlotDialog(QDialog):
 
         self.setLayout(self.layout)
 
+class TimeTrackPlotDialog(QDialog):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Time track plot")
+        my_icon = QIcon("./img/logo.png")
+        self.setWindowIcon(my_icon)
+
+        self.layout = QVBoxLayout()
+
+        label = QLabel(self)
+        pixmap = QPixmap("gui_tmp/time_track.png")
+        label.setPixmap(pixmap)
+        self.layout.addWidget(label)
+
+        self.setLayout(self.layout)
+
 
 
 
