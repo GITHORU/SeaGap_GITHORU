@@ -261,7 +261,7 @@ class DenoiseDialog(QDialog):
             sigma = float(self.sigma_selector.line_edit.text())
         else :
             sigma = 4.0
-        self.jl.SeaGap.denoise(lat,TR_DEPTH, fn1=path_ANT , fn2=path_PXP , fn3=path_SSP , fn4=path_OBS, fno1="gui_tmp/tmp_denoise.out", fno2="gui_tmp/tmp_denoise.png", save=False, show=False, prompt=False, n=n, sigma=sigma, k=k)
+        self.jl.SeaGap.denoise(lat,juliacall.convert(self.jl.Vector[self.jl.Float64], [TR_DEPTH]), fn1=path_ANT , fn2=path_PXP , fn3=path_SSP , fn4=path_OBS, fno1="gui_tmp/tmp_denoise.out", fno2="gui_tmp/tmp_denoise.png", save=False, show=False, prompt=False, n=n, sigma=sigma, k=k)
         pixmap = QPixmap('gui_tmp/tmp_denoise.png')
         self.graph_img.setPixmap(pixmap.scaled(pixmap.width()//2, pixmap.height()//2, Qt.AspectRatioMode.KeepAspectRatio ))
         self.graph_img.repaint()
