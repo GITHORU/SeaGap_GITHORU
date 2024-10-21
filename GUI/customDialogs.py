@@ -5,10 +5,16 @@ from PySide6.QtGui import QIcon, QPixmap
 import shutil, os
 from PySide6.QtCore import Qt
 import juliacall
+# from juliacall import main as jl
 
 from os.path import exists, join
 
 from GARPOS2SeaGap import GARPOS2SeaGap
+
+from multiprocessing import Process
+
+# jl.seval('using SeaGap')
+
 
 
 class NewProjectDialog(QDialog):
@@ -557,6 +563,9 @@ class Histogram2DGradVPlotDialog(QDialog):
         self.graph_img1 = QLabel()
         self.fig_layout.addWidget(self.graph_img1)
 
+        self.graph_img2 = QLabel()
+        self.fig_layout.addWidget(self.graph_img2)
+
         self.layout.addLayout(self.fig_layout)
 
         self.run_histogram2dgradv_plot_button = QPushButton("Run Histogram 2D Grad V plot")
@@ -578,6 +587,8 @@ class Histogram2DGradVPlotDialog(QDialog):
     def run_histogram2dgradv_plot(self):
         self.graph_img1.clear()
         self.graph_img1.repaint()
+        self.graph_img2.clear()
+        self.graph_img2.repaint()
         if self.folder_selector.line_edit.text() == "" and self.nshuffle_selector.line_edit.text() == "":
             print("Lacking parameters")
             self.statusbar.showMessage("Lacking parameters")
@@ -593,6 +604,13 @@ class Histogram2DGradVPlotDialog(QDialog):
         self.graph_img1.setPixmap(
             pixmap1.scaled(pixmap1.width() // 1, pixmap1.height() // 1, Qt.AspectRatioMode.KeepAspectRatio))
         self.graph_img1.repaint()
+
+        self.jl.SeaGap.plot_cormap_gradv(fn=join(mcmcgradv_folder, "static_array_mcmcgradv_sample.out"), show=False, fno=join(mcmcgradv_folder, "static_array_mcmcgradv_corrfig.png"))
+
+        pixmap2 = QPixmap(join(mcmcgradv_folder, "static_array_mcmcgradv_corrfig.png"))
+        self.graph_img2.setPixmap(
+            pixmap2.scaled(pixmap2.width() // 1, pixmap2.height() // 1, Qt.AspectRatioMode.KeepAspectRatio))
+        self.graph_img2.repaint()
 
 
 class NTDMCMCGradVPlotDialog(QDialog):
@@ -1125,7 +1143,6 @@ class StaticIndividualDialog(QDialog):
 
     def __init__(self, l_path, jl):
         super().__init__()
-
         self.statusbar = QStatusBar(self)
         self.setWindowTitle("Static array individual")
         my_icon = QIcon("./img/logo.png")
@@ -1218,6 +1235,7 @@ class StaticIndividualDialog(QDialog):
         position_path = os.path.join(folder_path, "static_array_individual_position.out")
         residual_path = os.path.join(folder_path, "static_array_individual_residual.out")
         bspline_path = os.path.join(folder_path, "static_array_individual_bspline.out")
+        # from juliacall imp
+        # jl_proc.println("TEST")
         self.jl.SeaGap.static_individual(lat, juliacall.convert(self.jl.Vector[self.jl.Float64], [TR_DEPTH]), NPB, fn1=path_ANT, fn2=path_PXP, fn3=path_SSP, fn4=path_OBS, eps=eps, ITMAX=ITMAX, delta_pos=delta_pos, fno0=log_path, fno1=solve_path, fno2=position_path, fno3=residual_path, fno4=bspline_path)
-
         self.buttonBox.setDisabled(False)

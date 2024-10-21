@@ -28,9 +28,11 @@ def GARPOS2SeaGap(path_obs, path_svp, path_ini, path_pxp_o, path_obs_o, path_ssp
             while line and flag :
                 if "ATDoffset" in line :
                     val_list = [float(val) for val in line.split("=")[1].split()]
-                    for val in val_list[:3]:
-                        file_o.write(str(val)+" ")
-                    file_o.write("\n")
+                    file_o.write(str(val_list[1])+" "+str(val_list[0])+" "+str(-val_list[2])+"\n")
+                    # val_list[2] = -val_list[2]
+                    # for val in val_list[:3]:
+                    #     file_o.write(str(val)+" ")
+                    # file_o.write("\n")
                     flag = False
                 line = file.readline()
 

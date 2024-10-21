@@ -1,23 +1,22 @@
-from PySide6.QtWidgets import QMainWindow, QWidget, QApplication, QTabWidget, QVBoxLayout, QPushButton, QToolBar, QStatusBar, QFileDialog
-from PySide6.QtGui import QIcon, QAction
 import sys
 from os.path import exists, join
-
-from GUI.customDialogs import DenoiseDialog, StaticArrayDialog, StaticArrayGradDialog, StaticArrayMCMCGradVDialog, \
-    StaticIndividualDialog, NewProjectDialog, TtresDialog, MCMCGradVPlotDialog, NTDMCMCGradVPlotDialog, FromGARPOSDialog, TrackPlotDialog, TimeTrackPlotDialog, GradmapDialog, Histogram2DGradVPlotDialog
-from customLayout import FileExplorerLayout
 
 import yaml, os
 
 from juliacall import Main as jl
+from juliacall import Pkg as jlPkg
 
-# jl.seval('using ../src/SeaGap.jl')
-# jl.seval('cd ../')
-# jl.seval('include("../src/SeaGap.jl")')
-# jl.seval('import Pkg')
-# jl.seval('Pkg.add(url="https://github.com/f-tommy/SeaGap")')
-jl.seval('using SeaGap')
-jl.seval
+jlPkg.add(url="https://github.com/f-tommy/SeaGapR")
+jl.seval("using SeaGapR")
+jl.seval('const SeaGap = SeaGapR')
+
+from PySide6.QtWidgets import QMainWindow, QWidget, QApplication, QTabWidget, QVBoxLayout, QPushButton, QToolBar, QStatusBar, QFileDialog
+from PySide6.QtGui import QIcon, QAction
+from customDialogs import DenoiseDialog, StaticArrayDialog, StaticArrayGradDialog, StaticArrayMCMCGradVDialog, \
+    StaticIndividualDialog, NewProjectDialog, TtresDialog, MCMCGradVPlotDialog, NTDMCMCGradVPlotDialog, FromGARPOSDialog, TrackPlotDialog, TimeTrackPlotDialog, GradmapDialog, Histogram2DGradVPlotDialog
+from customLayout import FileExplorerLayout
+
+
 
 def is_path_list_valid(path_list):
     for path in path_list :
@@ -371,7 +370,6 @@ class MainWindow(QMainWindow):
 
 
     def run_static_individual_dlg(self):
-
         l_path = self.get_path_list()
         if not is_path_list_valid(l_path):
             self.status_bar.showMessage("Paths not valid")
