@@ -411,7 +411,7 @@ class TtresDialog(QDialog):
         TR_DEPTH = float(self.TR_DEPTH_selector.line_edit.text())
         path_ANT, path_PXP, path_SSP, path_OBS = self.l_path
 
-        self.jl.SeaGap.ttres(lat, TR_DEPTH, fn1=path_ANT, fn2=path_PXP, fn3=path_SSP, fn4=path_OBS, fno="gui_tmp/tmp_ttres_ttres.out", fno0="gui_tmp/tmp_ttres_log.txt", save=True)
+        self.jl.SeaGap.ttres(lat, juliacall.convert(self.jl.Vector[self.jl.Float64], [TR_DEPTH]), fn1=path_ANT, fn2=path_PXP, fn3=path_SSP, fn4=path_OBS, fno="gui_tmp/tmp_ttres_ttres.out", fno0="gui_tmp/tmp_ttres_log.txt", save=True)
         self.jl.SeaGap.plot_ttres(fn="gui_tmp/tmp_ttres_ttres.png", fn0="gui_tmp/tmp_ttres_ttres.out", show=False)
         pixmap = QPixmap("gui_tmp/tmp_ttres_ttres.png")
         self.graph_img.setPixmap(
@@ -1144,7 +1144,7 @@ class StaticIndividualDialog(QDialog):
     def __init__(self, l_path, jl):
         super().__init__()
         self.statusbar = QStatusBar(self)
-        self.setWindowTitle("Static array individual")
+        self.setWindowTitle("Static individual")
         my_icon = QIcon("./img/logo.png")
         self.setWindowIcon(my_icon)
 
